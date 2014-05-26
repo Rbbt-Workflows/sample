@@ -2,7 +2,17 @@ sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
  workflow.rb
  workflow.md
  lib=lib {
+  sample=sample{
+   annotate_vcf.rb
+   sample.rb
+  }
  }
  share=share{
+  rbbt_commands=rbbt_commands{
+   list
+  }
+ }
+ etc=etc{
+  sample_repo
  }
 }
