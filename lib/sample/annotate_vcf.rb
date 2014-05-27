@@ -1,4 +1,3 @@
-
 module Sample
   input :vcf, :string, "VCF file", nil
   input :organism, :string, "Organism code", "Hsa"
@@ -22,7 +21,9 @@ module Sample
 
       next line unless pasted_annotations.include? mutation
       values =  pasted_annotations[mutation].collect{|v| ((v || []) * "|").gsub(';','|') }
-      line + ';' +  new_fields.zip(values).collect{|f,v| next if v.empty?; [f,v] * "="}.compact * ";"
+      parts = line.split("\t")
+      parts[7] << ';' <<  new_fields.zip(values).collect{|f,v| next if v.empty?; [f,v] * "="}.compact * ";"
+      parts * "\t"
     end
   end
 

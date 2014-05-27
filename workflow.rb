@@ -7,24 +7,6 @@ Workflow.require_workflow "Structure"
 module Sample
   extend Workflow
 
-  #dep do |jobname, options|
-  #  if file = options[:file]
-  #    raise "File not found" unless Open.exists? file
-  #    if CMD.cmd("head -n 1 '#{file}'").read =~ /VCF/
-  #      Sequence.job(:genomic_mutations, jobname, options.merge(:vcf_file => Open.open(file)))
-  #    end
-  #  end
-  #end
-  #input :file, :string, "VCF file, or genomic mutation list", nil
-  #input :organism, :string, "Organism code", "Hsa"
-  #task :mutations => :array do |file,organism|
-  #  if step(:genomic_mutations)
-  #    step(:genomic_mutations).get_stream || step(:genomic_mutations).path.open
-  #  else
-  #    Open.open(file)
-  #  end
-  #end
-
   input :file, :string, "VCF file, or genomic mutation list", nil
   input :organism, :string, "Organism code", nil
   input :watson, :boolean, "Variants reported in the watson (forward) strand", nil
@@ -90,34 +72,27 @@ module Sample
   task :annotations => :tsv do |principal|
     jobs = []
 
+    step(:mutations).join
     Structure::ANNOTATORS.keys.each do |database|
-      jobs << Structure.job(:annotate, name, :mutations => step(:mutations).grace, :organism => organism, :database => database, :principal => principal, :watson => watson).run(true)
+      jobs << Structure.job(:annotate, name, :mutations => step(:mutations), :organism => organism, :database => database, :principal => principal, :watson => watson).run(true)
     end
 
-    begin
-      threads = []
-      jobs.each do |j| threads << Thread.new{j.grace.join} end
-      threads.each{|t| t.join }
+    Step.wait_for_jobs(jobs)
 
-      clean_pos = nil
-      TSV.traverse TSV.paste_streams(jobs), :into => :stream, :type => :array do |line|
-        next line if line =~ /^#:/
-        if line =~ /^#/
-            clean_pos = []
-            key, *fields = line.split("\t",-1)
-            fields.each_with_index do |f,i|
-              clean_pos << i unless f == "Mutated Isoform" or f == "Residue" or f == "Genomic Mutation"
-            end
-            key << "\t" << fields.values_at(*clean_pos) * "\t"
-        else
-          k, *rest = line.split("\t",-1)
-          k << "\t" << rest.values_at(*clean_pos)*"\t"
-        end
+    clean_pos = nil
+    TSV.traverse TSV.paste_streams(jobs), :into => :stream, :type => :array do |line|
+      next line if line =~ /^#:/
+      if line =~ /^#/
+          clean_pos = []
+          key, *fields = line.split("\t",-1)
+          fields.each_with_index do |f,i|
+            clean_pos << i unless f == "Mutated Isoform" or f == "Residue" or f == "Genomic Mutation"
+          end
+          key << "\t" << fields.values_at(*clean_pos) * "\t"
+      else
+        k, *rest = line.split("\t",-1)
+        k << "\t" << rest.values_at(*clean_pos)*"\t"
       end
-
-    rescue Exception
-      jobs.each do |j| j.abort unless j.done? end
-      raise $!
     end
   end
 
@@ -126,34 +101,27 @@ module Sample
   task :neighbour_annotations => :tsv do |principal|
     jobs = []
 
+    step(:mutations).join
     Structure::ANNOTATORS.keys.each do |database|
-      jobs << Structure.job(:annotate_neighbours, name, :mutations => step(:mutations).grace, :organism => organism, :database => database, :principal => principal, :watson => watson).run(true)
+      jobs << Structure.job(:annotate_neighbours, name, :mutations => step(:mutations), :organism => organism, :database => database, :principal => principal, :watson => watson).run(true)
     end
 
-    begin
+    Step.wait_for_jobs(jobs)
 
-      threads = []
-      jobs.each do |j| threads << Thread.new{j.grace.join} end
-      threads.each{|t| t.join }
-
-      clean_pos = nil
-      TSV.traverse TSV.paste_streams(jobs), :into => :stream, :type => :array do |line|
-        next line if line =~ /^#:/
-        if line =~ /^#/
-            clean_pos = []
-            key, *fields = line.split("\t",-1)
-            fields.each_with_index do |f,i|
-              clean_pos << i unless f == "Mutated Isoform" or f == "Residue" or f == "Genomic Mutation"
-            end
-            key << "\t" << fields.values_at(*clean_pos) * "\t"
-        else
-          k, *rest = line.split("\t",-1)
-          k << "\t" << rest.values_at(*clean_pos)*"\t"
-        end
+    clean_pos = nil
+    TSV.traverse TSV.paste_streams(jobs), :into => :stream, :type => :array do |line|
+      next line if line =~ /^#:/
+      if line =~ /^#/
+          clean_pos = []
+          key, *fields = line.split("\t",-1)
+          fields.each_with_index do |f,i|
+            clean_pos << i unless f == "Mutated Isoform" or f == "Residue" or f == "Genomic Mutation"
+          end
+          key << "\t" << fields.values_at(*clean_pos) * "\t"
+      else
+        k, *rest = line.split("\t",-1)
+        k << "\t" << rest.values_at(*clean_pos)*"\t"
       end
-    rescue Exception
-      jobs.each do |j| j.abort unless j.done? end
-      raise $!
     end
   end
 end
