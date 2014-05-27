@@ -26,6 +26,4 @@ module Sample
       parts * "\t"
     end
   end
-
-  export_asynchronous :annotate_vcf
 end

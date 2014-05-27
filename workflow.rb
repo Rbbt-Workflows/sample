@@ -9,7 +9,7 @@ module Sample
 
   input :file, :string, "VCF file, or genomic mutation list", nil
   input :organism, :string, "Organism code", nil
-  input :watson, :boolean, "Variants reported in the watson (forward) strand", nil
+  input :watson, :boolean, "Variants reported in the watson (forward) strand", true
   task :mutations => :array do |file, organism,watson|
     if file
       organism ||= "Hsa"
@@ -24,7 +24,7 @@ module Sample
       if (organism.nil? or watson.nil?) and Open.exists?(metadata_file)
         metadata = Open.open(metadata_file){|f| YAML.load(f) }
         organism = metadata[:organism] if organism.nil?
-        watson = metadata[:watson] if watson.nil?
+        watson = metadata[:watson] if metadata.include? :watson
       end
 
       organism ||= "Hsa"
@@ -52,12 +52,12 @@ module Sample
       mis * "\n"
     end
 
-    cmd.cmd('sort -u', :in => s, :pipe => true)
+    CMD.cmd('sort -u', :in => s, :pipe => true)
   end
 
   dep :mutations
   input :principal, :boolean, "Use only principal isoforms", true
-  task :affected_genes => :tsv do |principal|
+  task :affected_genes => :array do |principal|
     job = Sequence.job(:affected_genes, name, :mutations => step(:mutations).grace, :organism => organism, :watson => watson, :principal => principal).run(true).grace
 
     s = TSV.traverse job, :into => :stream do |m, genes|
@@ -124,6 +124,8 @@ module Sample
       end
     end
   end
+
+  export_asynchronous :mutations, :mutated_isoforms, :affected_genes, :annotations, :neighbour_annotations, :annotate_vcf, :new_sample
 end
 
 require 'sample/annotate_vcf'

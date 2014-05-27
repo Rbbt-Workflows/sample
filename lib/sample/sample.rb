@@ -30,11 +30,22 @@ module Sample
   end
 
   def self.mutations_from_file(file)
-    raise "File not found: #{ file }" unless Open.exists? file
-    if file =~ /\.vcf$/i or CMD.cmd("head -n 1 '#{file}'").read =~ /VCF/
+    raise "File not found: #{ file }" unless Open.exists? file or Open.remote? file
+    if file =~ /\.vcf(?:\.gz)?$/i or CMD.cmd("head -n 1 '#{file}'").read =~ /VCF/
       Sequence.job(:genomic_mutations, file, :vcf_file => Open.open(file)).run false
     else
       Open.open(file)
     end
+  end
+
+  def self.add_sample(name, content)
+    path = Sample::SAMPLE_REPO[name]
+    Open.write(path, content)
+  end
+
+  input :file, :text, "Input file", nil
+  input :name, :string, "Sample name", nil
+  task :new_sample => :string do |file, name|
+    Sample.add_sample(name, file)
   end
 end
