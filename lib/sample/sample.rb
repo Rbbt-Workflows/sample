@@ -1,7 +1,7 @@
+require 'rbbt-util'
 require 'rbbt/entity/study'
 
 module Sample
-
   SAMPLE_REPO = begin
                   if Rbbt.etc.sample_repo.exists?
                     Path.setup(File.expand_path(Rbbt.etc.sample_repo.read.strip))
@@ -17,15 +17,19 @@ module Sample
   end
 
   def self.sample_genotype(code, dir = nil)
-    return dir[code].find if dir
-    namespace, sample = code.split "~"
-    sample, namespace = namespace, nil if sample.nil?
-
-    if namespace
-      dir = Study.study_dir[namespace].genotypes
-      sample_genotype(sample, dir)
+    if dir
+      raise "Sample not found" unless Open.exists? dir[code] or Open.
+      return dir[code].find
     else
-      sample_genotype(sample, SAMPLE_REPO)
+      namespace, sample = code.split "~"
+      sample, namespace = namespace, nil if sample.nil?
+
+      if namespace
+        dir = Study.study_dir[namespace].genotypes
+        sample_genotype(sample, dir)
+      else
+        sample_genotype(sample, SAMPLE_REPO)
+      end
     end
   end
 
@@ -43,9 +47,15 @@ module Sample
     Open.write(path, content)
   end
 
+  def self.get(name)
+    namespace, sample = code.split "~"
+    sample, namespace = namespace, nil if sample.nil?
+    Sample.setup(sample, :namespace => namespace)
+  end
+
   input :file, :text, "Input file", nil
   input :name, :string, "Sample name", nil
   task :new_sample => :string do |file, name|
     Sample.add_sample(name, file)
   end
-end
+  end

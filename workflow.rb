@@ -18,21 +18,7 @@ module Sample
       set_info :watson, watson
       Sample.mutations_from_file file 
     else
-      sample_file = Sample.sample_genotype(name)
-
-      metadata_file = File.join(File.dirname(sample_file), '../metadata.yaml')
-      if (organism.nil? or watson.nil?) and Open.exists?(metadata_file)
-        metadata = Open.open(metadata_file){|f| YAML.load(f) }
-        organism = metadata[:organism] if organism.nil?
-        watson = metadata[:watson] if metadata.include? :watson
-      end
-
-      organism ||= "Hsa"
-      watson = true if watson.nil?
-
-      set_info :organism, organism
-      set_info :watson, watson
-      Sample.mutations_from_file sample_file
+      Sample.get(name).genotype
     end
   end
 
