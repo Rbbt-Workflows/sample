@@ -5,6 +5,9 @@ sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
   sample=sample{
    annotate_vcf.rb
    sample.rb
+   sample=sample{
+    entity.rb
+   }
   }
  }
  share=share{
