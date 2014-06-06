@@ -1,12 +1,13 @@
 sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
  workflow.rb
+ res
  workflow.md
  lib=lib {
   sample=sample{
    annotate_vcf.rb
    sample.rb
    sample=sample{
-    entity.rb
+    mutations.rb
    }
   }
  }

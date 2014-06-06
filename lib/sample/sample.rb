@@ -1,5 +1,6 @@
 require 'rbbt-util'
 require 'rbbt/entity/study'
+require 'sample/sample/mutations'
 
 module Sample
   SAMPLE_REPO = begin
@@ -10,4 +11,10 @@ module Sample
                   end
                 end
 
+  def self.sample_job(workflow, task, sample, options)
+    options = Misc.add_defaults options, :mutations => Sample.mutations(sample),
+      :organism => Sample.organism(sample), :watson => Sample.watson(sample) 
+    IndiferentHash.setup(options)
+    workflow.job task, sample, options
+  end
 end
