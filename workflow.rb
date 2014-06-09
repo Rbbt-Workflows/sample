@@ -24,6 +24,14 @@ module Sample
     end
   end
 
+  dep :mutated_isoforms
+  task :ns_mutated_isoforms => :array do 
+    TSV.traverse step(:mutated_isoforms), :type => :array, :into => :stream do |line|
+      next if line =~ /:([A-Z*])\d+([A-Z*])/ and $1 == $2
+      line
+    end
+  end
+
   dep do |sample,options|
     Sample.sample_job(Structure, :interfaces, sample, options)
   end
@@ -95,6 +103,7 @@ module Sample
   dep :neighbour_annotations
   dep :interfaces
   dep :mutated_isoforms
+  dep :ns_mutated_isoforms
   task :all => :string do
     Step.wait_for_jobs dependencies
     "DONE"
