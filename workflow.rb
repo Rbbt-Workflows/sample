@@ -51,8 +51,6 @@ module Sample
   task :annotations => :tsv do |principal|
     jobs = dependencies.each do |dep| dep.grace end
 
-    #Step.wait_for_jobs(jobs)
-
     clean_pos = nil
     TSV.traverse TSV.paste_streams(jobs), :into => :stream, :type => :array do |line|
       next line if line =~ /^#:/
@@ -114,3 +112,4 @@ end
 
 require 'sample/annotate_vcf'
 require 'sample/sample'
+require 'sample/tasks/vcf'
