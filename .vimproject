@@ -1,12 +1,14 @@
 sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
  workflow.rb
- res
  workflow.md
  lib=lib {
-  tasks=tasks{
-   vcf.rb
-  }
   sample=sample{
+   tasks=tasks{
+    genomic_mutations.rb
+    mutated_isoforms.rb
+    annotations.rb
+    vcf.rb
+   }
    annotate_vcf.rb
    sample.rb
    sample=sample{

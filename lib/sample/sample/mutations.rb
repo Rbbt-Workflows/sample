@@ -1,15 +1,25 @@
 module Sample
 
+  def self.vcf_files(sample)
+    SAMPLE_REPO[sample].vcf.glob('*.vcf*')
+  end
+
   def self.mutations(sample)
     genotype = SAMPLE_REPO[sample].genotype.find
     if not genotype.exists?
       Open.write(SAMPLE_REPO[sample].genotype.find) do |fgenotype|
-        SAMPLE_REPO[sample].vcf.glob('*.vcf*').each do |file|
-          job = Sequence.job(:genomic_mutations, sample, :vcf_file => file).run(true)
-          TSV.traverse job, :type => :array do |line|
-            fgenotype.puts line
+        stream = Misc.open_pipe do |sin|
+          vcf_files(sample).each do |file|
+            job = Sequence.job(:genomic_mutations, sample, :vcf_file => file, :quality => nil)
+            job.recursive_clean
+            job.run(true)
+            TSV.traverse job, :type => :array do |line|
+              sin.puts line
+            end
           end
         end
+        sorted = CMD.cmd("sort -u", :in => stream, :pipe => true)
+        Misc.consume_stream sorted, false, fgenotype
       end
     end
     genotype
