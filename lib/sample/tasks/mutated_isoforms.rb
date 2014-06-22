@@ -55,6 +55,6 @@ module Sample
 
   dep :ns_mutated_isoforms
   task :db_NSFP => :tsv do
-    TSV.get_stream DbNSFP.job(:annotate, name, :mutations => step(:ns_mutated_isoforms)).clean.run(true)
+    TSV.get_stream DbNSFP.job(:annotate, name, :mutations => step(:ns_mutated_isoforms)).run(true)
   end
 end

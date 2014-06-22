@@ -39,6 +39,6 @@ module Sample
   end
   input :principal, :boolean, "Use only principal isoforms", true
   task :interfaces => :array do 
-    step(:interfaces).get_stream || step(:interfaces).join.path.open
+    TSV.get_stream step(:interfaces)
   end
 end

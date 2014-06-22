@@ -33,9 +33,18 @@ module Sample
   dep :damage
   dep :gerp
   task :final_vcf => :boolean do
-    Sample.vcf_files(name).each do |file|
+    Sample.vcf_files(clean_name).each do |file|
       basename = File.basename file
       expanded_vcf = Sequence::VCF.open_stream(file.open, false, false, false)
+
+      damage = TSV.traverse step(:damage), :type => :array, :into => :stream do |line|
+        next unless line =~ /ENSP/ or line =~ /^#/
+        if m = line.match(/^(.*?)\t.*?\t(.*)/)
+          m.values_at(0,1) * "\t"
+        else
+          next
+        end
+      end
 
       Step.wait_for_jobs([step(:affected_genes), step(:interfaces), step(:annotations)])
 
@@ -52,15 +61,6 @@ module Sample
       interfaces.fields = ["PPI Interface"]
 
       annotations = step(:annotations).path.tsv :key_field => "Genomic Mutation", :fields => ["Appris Features", "InterPro ID", "UniProt Features", "SNP ID"], :sep2 => /[;\|]/
-
-      damage = TSV.traverse step(:damage), :type => :array, :into => :stream do |line|
-        next unless line =~ /ENSP/ or line =~ /^#/
-        if m = line.match(/^(.*?)\t.*?\t(.*)/)
-          m.values_at(0,1) * "\t"
-        else
-          next
-        end
-      end
 
       pasted = TSV.paste_streams([expanded_vcf, affected_genes.dumper_stream, interfaces.dumper_stream, annotations.dumper_stream, step(:evs), step(:gerp), damage], :sort => true, :preamble => true)
       #pasted = TSV.paste_streams([expanded_vcf, affected_genes.dumper_stream, interfaces.dumper_stream, annotations.dumper_stream, step(:evs), step(:gerp)], :sort => true, :preamble => true)
