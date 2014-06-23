@@ -12,9 +12,9 @@ module Sample
               line 
             else
               mutation, *values = line.split "\t"
-              values.reject!{|v| v.nil? or v.empty?} unless values
+              values.reject!{|v| v.nil? or v.empty? } unless values
               if values and values.any?
-                [mutation, values * "|"] * "\t"
+[mutation, values * "|"]* "\t"
               else
                 mutation + "\t"
               end
@@ -39,31 +39,33 @@ module Sample
 
       damage = TSV.traverse step(:damage), :type => :array, :into => :stream do |line|
         next unless line =~ /ENSP/ or line =~ /^#/
-        if m = line.match(/^(.*?)\t.*?\t(.*)/)
-          m.values_at(0,1) * "\t"
-        else
-          next
-        end
+          if m = line.match(/^(.*?)\t.*?\t(.*)/)
+            m.values_at(0,1)* "\t"
+          else
+            next
+          end
       end
 
-      Step.wait_for_jobs([step(:affected_genes), step(:interfaces), step(:annotations)])
+      names = Organism.identifiers(organism).index :target => "Associated Gene Name", :persist => true
 
-      affected_genes = step(:affected_genes).path.tsv :fields => "Ensembl Gene ID", :type => :double
-      affected_genes.process "Ensembl Gene ID" do |g|
-        g.name
+      affected_genes = TSV.traverse(TSV.stream_flat2double(step(:affected_genes)), :into => :dumper, 
+                                    :fields =>["Affected gene"], :key_field => "Genomic Mutation")do |mutation,values|
+        genes = values.first
+        [mutation.first,[names.values_at(*genes).compact]]
       end
-      affected_genes.fields = ["Affected gene"]
 
-      interfaces = step(:interfaces).path.tsv :fields => "Ensembl Protein ID", :type => :double
-      interfaces.process "Ensembl Protein ID" do |p|
-        p.gene.name.uniq
+      interfaces = TSV.traverse(TSV::Parser.new(step(:interfaces), :fields =>["Ensembl Protein ID"]), :into => :dumper, 
+                                :fields =>["Affected PPI interface partner"], :key_field => "Genomic Mutation")do |mutation,values|
+        proteins = values.first
+        [mutation.first,[names.values_at(*proteins).compact]]
       end
-      interfaces.fields = ["PPI Interface"]
 
-      annotations = step(:annotations).path.tsv :key_field => "Genomic Mutation", :fields => ["Appris Features", "InterPro ID", "UniProt Features", "SNP ID"], :sep2 => /[;\|]/
+      annotations = TSV.traverse TSV::Parser.new(step(:annotations), :fields =>["Appris Features", "InterPro ID", "UniProt Features", "SNP ID"], :sep2 => /[;\|]/), 
+        :into => :dumper do |mutation,values|
+          [mutation.first, values]
+      end
 
-      pasted = TSV.paste_streams([expanded_vcf, affected_genes.dumper_stream, interfaces.dumper_stream, annotations.dumper_stream, step(:evs), step(:gerp), damage], :sort => true, :preamble => true)
-      #pasted = TSV.paste_streams([expanded_vcf, affected_genes.dumper_stream, interfaces.dumper_stream, annotations.dumper_stream, step(:evs), step(:gerp)], :sort => true, :preamble => true)
+      pasted = TSV.paste_streams([expanded_vcf, affected_genes, interfaces, annotations, damage, step(:evs), step(:gerp)], :sort => true, :preamble => true)
 
       stream = Sequence::VCF.save_stream(pasted)
 

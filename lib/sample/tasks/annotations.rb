@@ -35,8 +35,10 @@ module Sample
 
   dep :consequence
   dep :db_NSFP
+  input :non_synonymous, :boolean, "Consider only non-synonmous mutation", true
   task :damage => :tsv do
-    new = TSV.open(step(:consequence)).attach step(:db_NSFP)
+    new = TSV.open(TSV.stream_flat2double(step(:consequence)))
+    new = new.attach step(:db_NSFP)
     new.select{|k,v| vs = v[1..-1].flatten.compact; vs.any?}
   end
 end

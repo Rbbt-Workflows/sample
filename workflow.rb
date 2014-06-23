@@ -7,16 +7,12 @@ Workflow.require_workflow "Structure"
 module Sample
   extend Workflow
 
+  helper :sample do
+    clean_name
+  end
 
-  dep :affected_genes
-  #dep :annotations
-  #dep :neighbour_annotations
-  #dep :interfaces
-  dep :mutated_isoforms
-  dep :ns_mutated_isoforms
-  task :all => :string do
-    Step.wait_for_jobs dependencies
-    "DONE"
+  helper :organism do
+    Sample.organism sample
   end
 
   export_asynchronous :mutated_isoforms, :annotations, :neighbour_annotations, :annotate_vcf
