@@ -9,6 +9,8 @@ module Sample
                     Rbbt.var.sample_repo.find
                   end
                 end
+  STUDY_REPO = SAMPLE_REPO.sub("samples", "studies")
+  PROJECT_REPO = SAMPLE_REPO.sub("samples", "projects")
 
   def self.sample_job(workflow, task, sample, options)
     options = options.merge(:mutations => Sample.mutations(sample),

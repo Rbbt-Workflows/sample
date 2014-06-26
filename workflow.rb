@@ -1,9 +1,6 @@
 require 'rbbt-util'
 require 'rbbt/workflow'
 
-Workflow.require_workflow "Sequence"
-Workflow.require_workflow "Structure"
-
 module Sample
   extend Workflow
 
@@ -15,12 +12,14 @@ module Sample
     Sample.organism sample
   end
 
-  export_asynchronous :mutated_isoforms, :annotations, :neighbour_annotations, :annotate_vcf
+  def self.sample_dep(workflow, task)
+    dep workflow, task do |sample, options|
+      Sample.sample_job(workflow, task, sample, options)
+    end
+  end
 end
 
-require 'sample/annotate_vcf'
 require 'sample/sample'
-require 'sample/tasks/vcf'
 require 'sample/tasks/genomic_mutations'
 require 'sample/tasks/mutated_isoforms'
-require 'sample/tasks/annotations'
+require 'sample/tasks/vcf'

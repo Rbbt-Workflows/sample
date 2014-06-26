@@ -6,7 +6,10 @@ sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
    tasks=tasks{
     genomic_mutations.rb
     mutated_isoforms.rb
-    annotations.rb
+    mutated_isoforms=mutated_isoforms{
+     consequence.rb
+     annotations.rb
+    }
     vcf.rb
    }
    annotate_vcf.rb
