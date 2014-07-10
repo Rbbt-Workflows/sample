@@ -2,6 +2,12 @@ Workflow.require_workflow "Sequence"
 
 module Sample
 
+  sample_dep Sequence, :affected_genes
+  task :affected_genes => :tsv do 
+    Misc.sensiblewrite(path, TSV.get_stream(step(:affected_genes)))
+    nil
+  end
+
   sample_dep Sequence, :mutated_isoforms_fast
   input :principal, :boolean, "Use only principal isoforms", true
   task :consequence => :tsv do 

@@ -1,7 +1,8 @@
-sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
+Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
  workflow.rb
  workflow.md
  lib=lib {
+  sinatra.rb
   sample=sample{
    tasks=tasks{
     genomic_mutations.rb
@@ -12,10 +13,10 @@ sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
     }
     vcf.rb
    }
-   annotate_vcf.rb
    sample.rb
    sample=sample{
     mutations.rb
+    entity.rb
    }
   }
  }
@@ -26,5 +27,13 @@ sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
  }
  etc=etc{
   sample_repo
+ }
+ www=www{
+  views=views{
+   tasks.haml
+   entity=entity{
+    Sample.haml
+   }
+  }
  }
 }

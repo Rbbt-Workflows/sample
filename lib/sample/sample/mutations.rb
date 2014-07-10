@@ -4,24 +4,26 @@ module Sample
     if sample =~ /(.*):(.*)/
       code, sample = $1, $2
       return PROJECT_REPO[code][sample] if PROJECT_REPO[code][sample].exists?
-      return STUDY_REPO[code][sample] if STUDY_REPO[code][sample].exists?
+      return STUDY_REPO[code].genotypes[sample] if STUDY_REPO[code].genotypes[sample].exists?
     else
       return SAMPLE_REPO[sample] 
     end
+    nil
   end
 
   def self.vcf_files(sample)
     sample_dir(sample).vcf.glob('*.vcf*')
   end
 
-  def self.mutations_from_vcfs(sample)
-    Sample.job(:vcf_mutations, sample).run(true)
-  end
-
   def self.mutations(sample)
-    genotype = sample_dir(sample).genotype.find
-    if not genotype.exists?
-      Open.write(sample_dir(sample).genotype.find) do |fgenotype|
+    sample_dir = sample_dir(sample)
+    raise "No sample data for: #{ sample }" if sample_dir.nil?
+
+    return sample_dir if sample_dir.exists? and not File.directory?(sample_dir)
+    if sample_dir.genotype.exists?
+      return sample_dir.genotype.find
+    else
+      Open.write(sample_dir.genotype.find) do |fgenotype|
         stream = Misc.open_pipe do |sin|
           vcf_files(sample).each do |file|
             job = Sequence.job(:genomic_mutations, sample, :vcf_file => file, :quality => nil)
@@ -35,8 +37,8 @@ module Sample
         sorted = CMD.cmd("sort -u", :in => stream, :pipe => true)
         Misc.consume_stream sorted, false, fgenotype
       end
+      return sample_dir.genotype.find
     end
-    genotype
   end
   
   def self.metadata(sample)

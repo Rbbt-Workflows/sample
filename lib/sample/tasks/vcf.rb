@@ -11,6 +11,48 @@ module Sample
   end
 
   dep :extended_vcf
+  task :homozygous => :array do
+    stream = Misc.open_pipe do |sin|
+      step(:extended_vcf).files.each do |basename|
+        file = step(:extended_vcf).file(basename)
+        s = sample.split(":").last
+        TSV.traverse file, :fields => [s + ':GT'], :type => :single, :bar => "Homozygous #{basename}" do |mutation,gt|
+          next unless gt == "1/1"
+          sin << mutation << "\n"
+        end
+      end
+    end
+    CMD.cmd('uniq', :in => stream, :pipe => true)
+  end
+
+  dep :extended_vcf
+  task :quality => :array do
+    dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Quality", "Filter"], :organism => organism, :type => :list
+    dumper.init
+    Thread.new do
+      step(:extended_vcf).files.each do |basename|
+        file = step(:extended_vcf).file(basename)
+        s = sample.split(":").last
+        TSV.traverse file, :fields => ["Quality", "Filter"], :type => :list, :bar => "Quality #{basename}" do |mutation,values|
+          qual, filt = values
+          dumper.add mutation, [qual, filt]
+        end
+      end
+      dumper.close
+    end
+    dumper
+  end
+
+  dep :quality
+  task :good_quality_mutations => :array do
+    TSV.traverse step(:quality), :bar => "Good mutations", :into => :stream do |mutation,values|
+      qual, filt = values
+      next unless filt == "PASS"
+      mutation
+    end
+  end
+
+  dep :extended_vcf
   dep :genomic_mutation_annotations
   dep :mutation_mi_annotations
   task :final_vcf => :string do
@@ -24,51 +66,4 @@ module Sample
     end
     files * "\n"
   end
-
-  #dep :evs
-  #dep :gerp
-  #dep :damage
-  #task :_final_vcf => :boolean do
-  #  Sample.vcf_files(clean_name).each do |file|
-  #    basename = File.basename file
-  #    expanded_vcf = Sequence::VCF.open_stream(file.open, false, false, false)
-
-  #    damage = TSV.traverse step(:damage), :type => :array, :into => :stream do |line|
-  #      next unless line =~ /ENSP/ or line =~ /^#/
-  #        if m = line.match(/^(.*?)\t.*?\t(.*)/)
-  #          m.values_at(0,1)* "\t"
-  #        else
-  #          next
-  #        end
-  #    end
-
-  #    names = Organism.identifiers(organism).index :target => "Associated Gene Name", :persist => true
-
-  #    #affected_genes = TSV.traverse(TSV.stream_flat2double(step(:affected_genes)), :into => :dumper, 
-  #    #                              :fields =>["Affected gene"], :key_field => "Genomic Mutation")do |mutation,values|
-  #    #  genes = values.first
-  #    #  [mutation.first,[names.values_at(*genes).compact]]
-  #    #end
-
-  #    #interfaces = TSV.traverse(TSV::Parser.new(step(:interfaces), :fields =>["Ensembl Protein ID"]), :into => :dumper, 
-  #    #                          :fields =>["Affected PPI interface partner"], :key_field => "Genomic Mutation")do |mutation,values|
-  #    #  proteins = values.first
-  #    #  [mutation.first,[names.values_at(*proteins).compact]]
-  #    #end
-
-  #    #annotations = TSV.traverse TSV::Parser.new(step(:annotations), :fields =>["Appris Features", "InterPro ID", "UniProt Features", "SNP ID"], :sep2 => /[;\|]/), 
-  #    #  :into => :dumper do |mutation,values|
-  #    #    [mutation.first, values]
-  #    #end
-
-  #    #pasted = TSV.paste_streams([expanded_vcf, affected_genes, interfaces, annotations, damage, step(:evs), step(:gerp)], :sort => true, :preamble => true)
-  #    pasted = TSV.paste_streams([expanded_vcf, step(:evs), step(:gerp), damage], :sort => true, :preamble => true)
-
-  #    stream = Sequence::VCF.save_stream(pasted)
-
-  #    FileUtils.mkdir_p files_dir unless File.exists? files_dir
-  #    Misc.sensiblewrite(file(basename), stream)
-  #    true
-  #  end
-  #end
 end

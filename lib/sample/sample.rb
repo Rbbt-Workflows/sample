@@ -19,4 +19,16 @@ module Sample
     IndiferentHash.setup(options)
     workflow.job task, sample, options
   end
+
+  def self.all_samples
+    SAMPLE_REPO.glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }
+  end
+
+  def self.all_projects
+    PROJECT_REPO.glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }  
+  end
+
+  def self.all_studies
+    STUDY_REPO.glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }
+  end
 end

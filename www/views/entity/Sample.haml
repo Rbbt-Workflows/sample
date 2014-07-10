@@ -1,0 +1,15 @@
+- sample = entity
+- entity_card = EntityCard.new(sample)
+- entity_card.name = entity
+- entity_card.meta do
+  %dl
+    %dt From VCF
+    %dd= Sample.vcf_files(sample).any?
+
+- entity_card.description do
+  - good = sample.good_quality_mutations
+  == Good mutations in #{ sample }: #{good.length}
+
+- entity_card.action_controller = default_action_controller sample
+
+= entity_card_render entity_card

@@ -1,0 +1,10 @@
+%h1 All samples
+
+%ul
+  - Sample.all_samples.each do |sample|
+    - Sample.setup sample
+    - iii Annotated === sample
+    - iii Sample === sample
+    - iif sample
+    %li= sample.link
+  
