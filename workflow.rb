@@ -22,4 +22,6 @@ end
 require 'sample/sample'
 require 'sample/tasks/genomic_mutations'
 require 'sample/tasks/mutated_isoforms'
+require 'sample/tasks/genes'
 require 'sample/tasks/vcf'
+require 'sample/sample/entity'

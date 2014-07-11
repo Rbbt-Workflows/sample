@@ -32,3 +32,4 @@ module Sample
     STUDY_REPO.glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }
   end
 end
+

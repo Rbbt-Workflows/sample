@@ -1,5 +1,6 @@
 require 'sample/tasks/mutated_isoforms/consequence'
 require 'sample/tasks/mutated_isoforms/annotations'
+require 'sample/tasks/mutated_isoforms/damage'
 
 module Sample
 

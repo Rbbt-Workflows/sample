@@ -10,6 +10,13 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
     mutated_isoforms=mutated_isoforms{
      consequence.rb
      annotations.rb
+     damage.rb
+    }
+    genes.rb
+    genes=genes{
+     alterations.rb
+     activity.rb
+     tumor_suppressors.rb
     }
     vcf.rb
    }

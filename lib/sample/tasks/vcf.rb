@@ -52,9 +52,9 @@ module Sample
     end
   end
 
-  dep :extended_vcf
   dep :genomic_mutation_annotations
   dep :mutation_mi_annotations
+  dep :extended_vcf
   task :final_vcf => :string do
     step(:extended_vcf).files.each do |name|
       vcf_file = step(:extended_vcf).file(name)
