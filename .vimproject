@@ -17,6 +17,7 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
      alterations.rb
      activity.rb
      tumor_suppressors.rb
+     oncogenes.rb
     }
     vcf.rb
    }
