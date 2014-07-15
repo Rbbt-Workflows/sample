@@ -53,4 +53,8 @@ module Sample
   def self.watson(sample)
     (w = metadata(sample)[:watson]).nil? ? true : w
   end
+
+  task :organism => :string do
+    organism
+  end
 end

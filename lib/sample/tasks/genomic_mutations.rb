@@ -8,6 +8,7 @@ module Sample
 
   input :file, :file, "Input file"
   input :vcf, :boolean, "Input file is a VCF", false
+  dep :organism
   task :genomic_mutations => :array do |file, vcf|
     stream = if file
                if vcf
@@ -23,20 +24,20 @@ module Sample
   end
 
   dep :genomic_mutations
-  dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations
+  dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :organism => :organism
   task :muts => :tsv do 
     TSV.get_stream step(:mutated_isoforms_fast)
   end
 
   dep :genomic_mutations
-  dep GERP, :annotate, :mutations => :genomic_mutations
-  dep EVS, :annotate, :mutations => :genomic_mutations
+  dep GERP, :annotate, :mutations => :genomic_mutations, :organism => :organism
+  dep EVS, :annotate, :mutations => :genomic_mutations, :organism => :organism
   task :genomic_mutation_annotations => :tsv do 
     TSV.paste_streams(dependencies[1..-1], :sort => false)
   end
 
   dep :genomic_mutations
-  dep Sequence, :affected_genes, :mutations => :genomic_mutations
+  dep Sequence, :affected_genes, :mutations => :genomic_mutations, :organism => :organism
   task :compound_mutations => :array do
     tsv = step(:affected_genes).join.path.tsv :key_field => "Ensembl Gene ID", :merge => true, :type => :flat
     tsv.select{|g,ms| ms.length > 1 }.values.flatten.compact.sort.uniq
