@@ -42,7 +42,11 @@ module Sample
   end
   
   def self.metadata(sample)
-    metadata_file = sample_dir(sample).metadata
+    sample_dir = sample_dir(sample)
+    return {} if sample_dir.nil?
+    sample_dir = sample_dir.annotate sample_dir.gsub(/genotypes\/.*/,'')
+    metadata_file = sample_dir.metadata
+    metadata_file = sample_dir["metadata.yaml"] unless metadata_file.exists?
     metadata_file.exists? ? metadata_file.yaml : {}
   end
 

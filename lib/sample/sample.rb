@@ -12,13 +12,13 @@ module Sample
   STUDY_REPO = SAMPLE_REPO.sub("samples", "studies")
   PROJECT_REPO = SAMPLE_REPO.sub("samples", "projects")
 
-  def self.sample_job(workflow, task, sample, options)
-    options = options.merge(:mutations => Sample.mutations(sample),
-      :organism => Sample.organism(sample), :watson => Sample.watson(sample))
+  #def self.sample_job(workflow, task, sample, options)
+  #  options = options.merge(:mutations => Sample.mutations(sample),
+  #    :organism => Sample.organism(sample), :watson => Sample.watson(sample))
 
-    IndiferentHash.setup(options)
-    workflow.job task, sample, options
-  end
+  #  IndiferentHash.setup(options)
+  #  workflow.job task, sample, options
+  #end
 
   def self.all_samples
     SAMPLE_REPO.glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }
