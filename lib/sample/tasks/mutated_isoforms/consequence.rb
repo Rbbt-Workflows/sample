@@ -3,17 +3,17 @@ Workflow.require_workflow "Sequence"
 module Sample
 
   dep :genomic_mutations
-  dep Sequence, :affected_genes, :mutations => :genomic_mutations, :organism => :organism
+  dep Sequence, :affected_genes, :mutations => :genomic_mutations, :organism => :organism, :watson => :watson
   task :affected_genes => :tsv do 
     Misc.sensiblewrite(path, TSV.get_stream(step(:affected_genes)))
-    nil
+    path.tsv
   end
 
   dep :genomic_mutations
-  dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :vcf => false, :organism => :organism
+  dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :vcf => false, :organism => :organism, :watson => :watson
   task :consequence => :tsv do 
     Misc.sensiblewrite(path, TSV.get_stream(step(:mutated_isoforms_fast)))
-    nil
+    path.tsv
   end
 
   dep :consequence
@@ -22,7 +22,7 @@ module Sample
       isoforms.select{|i| i =~ /ENSP/ } * "\n"
     end
     CMD.cmd("sort -u > #{path}", :in => stream.read)
-    nil
+    path.list
   end
 
   dep :isoforms
@@ -32,6 +32,6 @@ module Sample
       line
     end
     Misc.sensiblewrite(path, stream)
-    nil
+    path.list
   end
 end

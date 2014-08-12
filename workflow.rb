@@ -12,6 +12,18 @@ module Sample
     Sample.organism sample
   end
 
+  helper :watson do
+    Sample.watson sample
+  end
+
+  task :organism => :string do
+    organism
+  end
+
+  task :watson => :string do
+    organism
+  end
+
   def self.sample_dep(workflow, task)
     dep workflow, task do |sample, options|
       Sample.sample_job(workflow, task, sample, options)
@@ -19,9 +31,14 @@ module Sample
   end
 end
 
-require 'sample/sample'
+require 'sample'
 require 'sample/tasks/genomic_mutations'
 require 'sample/tasks/mutated_isoforms'
 require 'sample/tasks/genes'
 require 'sample/tasks/vcf'
-require 'sample/sample/entity'
+require 'rbbt/entity/sample'
+
+
+
+Workflow.require_workflow "MutationSignatures"
+require 'sample/tasks/mutation_signatures'

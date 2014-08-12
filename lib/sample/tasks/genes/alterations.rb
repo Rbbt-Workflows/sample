@@ -1,5 +1,15 @@
 module Sample
 
+  dep :genomic_mutations
+  dep Sequence, :genes, :positions => :genomic_mutations, :organism => :organism, :watson => :watson
+  task :overlapping_genes => :array do
+    genes = step(:genes)
+    stream = TSV.traverse genes, :into => :stream do |mutation, genes|
+      genes * "\n"
+    end
+    CMD.cmd('sort -u', :in => stream, :pipe => true)
+  end
+
   dep :affected_genes
   task :affected_splicing => :tsv do
 
@@ -27,12 +37,14 @@ module Sample
   dep :affected_genes
   task :mutated_isoform => :tsv do
 
-    splicing_mutations = step(:affected_genes).step(:mutated_isoforms_fast)
+    Step.wait_for_jobs dependencies
+
+    mutated_isoforms = dependencies.first.dependencies.last.step(:mutated_isoforms_fast)
 
     ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :persist => true
 
     gene_mutations = TSV.setup({}, :key_field => "Ensembl Gene ID", :fields => ["Genomic Mutation"], :type => :flat, :merge => true, :namespace => organism)
-    TSV.traverse splicing_mutations, :into => gene_mutations do |mutation, mis|
+    TSV.traverse mutated_isoforms, :into => gene_mutations do |mutation, mis|
       genes = Set.new
       mis.collect{|mi| mi.split(":").first }.each do |isoform|
         gene = ensp2ensg[isoform]
@@ -49,19 +61,13 @@ module Sample
     end
   end
 
-  dep :affected_genes
   dep :damaging
-  task :broken_isoform => :tsv do
-
-    damaging = step(:damaging).load
-
-    splicing_mutations = step(:affected_genes).step(:mutated_isoforms_fast)
+  task :damaged_isoform => :tsv do
 
     ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :persist => true
 
     gene_mutations = TSV.setup({}, :key_field => "Ensembl Gene ID", :fields => ["Genomic Mutation"], :type => :flat, :merge => true, :namespace => organism)
-    TSV.traverse splicing_mutations, :into => gene_mutations do |mutation, mis|
-      next unless damaging.include? mutation
+    TSV.traverse step(:damaging), :into => gene_mutations do |mutation, mis|
       genes = Set.new
       mis.collect{|mi| mi.split(":").first }.each do |isoform|
         gene = ensp2ensg[isoform]
@@ -75,6 +81,15 @@ module Sample
         list << [gene, mutation]
       end
       list
+    end
+  end
+
+  dep :damaged_isoform
+  dep :affected_splicing
+  task :broken => :tsv do
+    gene_mutations = TSV.setup({}, :key_field => "Ensembl Gene ID", :fields => ["Genomic Mutation"], :type => :flat, :merge => true, :namespace => organism)
+    TSV.traverse TSV.paste_streams(dependencies, :sort => true), :into => gene_mutations do |gene, mutations|
+      [gene, mutations.flatten.compact.uniq]
     end
   end
 end

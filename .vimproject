@@ -3,28 +3,34 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
  workflow.md
  lib=lib {
   sinatra.rb
+
+  sample.rb
   sample=sample{
-   tasks=tasks{
-    genomic_mutations.rb
-    mutated_isoforms.rb
-    mutated_isoforms=mutated_isoforms{
-     consequence.rb
-     annotations.rb
-     damage.rb
-    }
-    genes.rb
-    genes=genes{
-     alterations.rb
-     activity.rb
-     tumor_suppressors.rb
-     oncogenes.rb
-    }
-    vcf.rb
-   }
+   mutations.rb
+  }
+
+  entity=rbbt/entity{
    sample.rb
-   sample=sample{
-    mutations.rb
-    entity.rb
+  }
+
+  tasks=sample/tasks{
+   vcf.rb
+
+   genomic_mutations.rb
+
+   mutated_isoforms.rb
+   mutated_isoforms=mutated_isoforms{
+    consequence.rb
+    annotations.rb
+    damage.rb
+   }
+
+   genes.rb
+   genes=genes{
+    alterations.rb
+    activity.rb
+    tumor_suppressors.rb
+    oncogenes.rb
    }
   }
  }

@@ -1,4 +1,4 @@
-require 'sample/sample/entity'
+require 'rbbt/entity/sample'
 register Sinatra::RbbtRESTEntity
 
 Sample.module_eval do

@@ -28,12 +28,20 @@ module Sample
   dep :damaged_mi
   dep :truncated_mi
   dep :consequence
-  task :damaging => :array do |field,threshold|
+  task :damaging => :tsv do
     damaged_mi = Set.new(step(:damaged_mi).load)
     truncated_mi = Set.new(step(:truncated_mi).load)
-    TSV.traverse step(:consequence), :into => :stream do |mutation, mis|
-      next unless (damaged_mi & mis).any? or (truncated_mi & mis).any?
-      Array === mutation ? mutation.first : mutation
+
+    broken_mis = damaged_mi + truncated_mi
+
+    TSV.traverse step(:consequence), :into => :dumper, :type => :flat,
+      :key_field => "Genomic Mutation",
+      :fields => ["Mutated Isoform"] do |mutation, mis|
+      broken = broken_mis & mis
+      next if broken.empty?
+      mutation = Array === mutation ? mutation.first : mutation
+
+      [mutation, broken.to_a]
     end
   end
 end

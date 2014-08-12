@@ -1,13 +1,16 @@
 module Sample
 
   def self.sample_dir(sample)
+
     if sample =~ /(.*):(.*)/
       code, sample = $1, $2
-      return PROJECT_REPO[code][sample] if PROJECT_REPO[code][sample].exists?
-      return STUDY_REPO[code].genotypes[sample] if STUDY_REPO[code].genotypes[sample].exists?
+      return study_repo[code].genotypes[sample] if study_repo[code].genotypes[sample].exists?
+      return project_repo[code][sample] if project_repo[code][sample].exists?
+      return project_repo["*"][code].genotypes[sample].glob.first if project_repo["*"][code].genotypes[sample].glob.any?
     else
-      return SAMPLE_REPO[sample] 
+      return sample_repo[sample] 
     end
+
     nil
   end
 
@@ -58,7 +61,11 @@ module Sample
     (w = metadata(sample)[:watson]).nil? ? true : w
   end
 
-  task :organism => :string do
-    organism
+  helper :watson do
+    Sample.watson(clean_name)
+  end
+
+  task :watson => :boolean do
+    watson
   end
 end
