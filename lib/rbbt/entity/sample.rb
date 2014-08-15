@@ -15,7 +15,7 @@ module Sample
   
   Sample.tasks.each do |name, b|
     property name.to_sym => :single do |run=true|
-      job = Sample.job(name.to_sym, sample_code)
+      job = Sample.job(name.to_sym, self)
       case run
       when nil, TrueClass
         job.run 
