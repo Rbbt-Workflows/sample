@@ -24,7 +24,7 @@ module Sample
     organism
   end
 
-  def self.sample_dep(workflow, task)
+  def self._sample_dep(workflow, task)
     dep workflow, task do |sample, options|
       Sample.sample_job(workflow, task, sample, options)
     end
@@ -37,8 +37,6 @@ require 'sample/tasks/mutated_isoforms'
 require 'sample/tasks/genes'
 require 'sample/tasks/vcf'
 require 'rbbt/entity/sample'
-
-
 
 Workflow.require_workflow "MutationSignatures"
 require 'sample/tasks/mutation_signatures'

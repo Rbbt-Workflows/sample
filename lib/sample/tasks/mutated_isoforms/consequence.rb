@@ -21,7 +21,7 @@ module Sample
     stream = TSV.traverse step(:consequence), :into => :stream do |mutation,isoforms|
       isoforms.select{|i| i =~ /ENSP/ } * "\n"
     end
-    CMD.cmd("sort -u > #{path}", :in => stream.read)
+    CMD.cmd("sort -u > '#{path}'", :in => stream.read)
     path.list
   end
 

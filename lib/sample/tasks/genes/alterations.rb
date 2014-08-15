@@ -46,6 +46,7 @@ module Sample
     gene_mutations = TSV.setup({}, :key_field => "Ensembl Gene ID", :fields => ["Genomic Mutation"], :type => :flat, :merge => true, :namespace => organism)
     TSV.traverse mutated_isoforms, :into => gene_mutations do |mutation, mis|
       genes = Set.new
+      mis = mis.select{|mi| change = mi.split(":").last; match = change.match(/^([A-Z*]+)\d+([A-Z*]+)/); match and match[1] != match[2] }
       mis.collect{|mi| mi.split(":").first }.each do |isoform|
         gene = ensp2ensg[isoform]
         next if gene.nil?

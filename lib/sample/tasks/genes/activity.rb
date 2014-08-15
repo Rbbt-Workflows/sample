@@ -104,6 +104,14 @@ module Sample
   dep :broken_alleles
   task :broken_genes => :array do 
     TSV.traverse step(:broken_alleles), :into => :stream do |gene, alleles|
+      next unless alleles =~ /BOTH/
+      gene 
+    end
+  end
+
+  dep :broken_alleles
+  task :surely_broken_genes => :array do 
+    TSV.traverse step(:broken_alleles), :into => :stream do |gene, alleles|
       next unless alleles == "BOTH"
       gene 
     end

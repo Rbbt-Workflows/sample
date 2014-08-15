@@ -60,6 +60,7 @@ module Sample
   dep :broken
   task :mutation_genes  => :tsv do
     mutation_gene_info = {}
+
       
     TSV.traverse step(:genes) do |mutation, genes|
       mutation = mutation.first if Array === mutation
@@ -104,7 +105,7 @@ module Sample
       end
     end
 
-    tsv = TSV.setup({}, :key_field => "Genomic Mutation", :fields => ["Ensembl Gene ID", "affected", "damaged", "splicing", "broken"], :type => :double, :namespace => organism)
+    tsv = TSV.setup({}, :key_field => "Genomic Mutation", :fields => ["Ensembl Gene ID", "affected", "damaged", "splicing", "broken", "missing"], :type => :double, :namespace => organism)
 
     mutation_gene_info.each do |mutation, gene_info|
       genes = {}
@@ -114,9 +115,10 @@ module Sample
         genes[gene][:damaged] << mutation if info[:damaged]
         genes[gene][:splicing] << mutation if info[:splicing]
         genes[gene][:broken] << mutation if info[:broken]
+        genes[gene][:missing] << mutation if info[:missing]
       end
       values = genes.collect{|gene,info|
-        [gene] + info.values_at(:mutated, :damaged, :splicing, :broken).collect{|v| v.any? ? "true" : "false" }
+        [gene] + info.values_at(:mutated, :damaged, :splicing, :broken, :missing).collect{|v| (v and v.any?) ? "true" : "false" }
       }
       tsv[mutation] = Misc.zip_fields(values)
     end

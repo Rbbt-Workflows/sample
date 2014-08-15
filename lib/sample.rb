@@ -9,7 +9,7 @@ module Sample
                 if Rbbt.etc.sample_repo.exists?
                   Path.setup(File.expand_path(Rbbt.etc.sample_repo.read.strip).sub(/\/samples$/,''))
                 else
-                  Rbbt.var.sample_repo.find
+                  Rbbt.data
                 end
               end
       @dir
@@ -17,6 +17,8 @@ module Sample
 
     def sample_repo
       @sample_repo ||= dir.samples
+      @sample_repo
+
     end
 
     def study_repo

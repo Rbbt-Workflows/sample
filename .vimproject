@@ -9,10 +9,6 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
    mutations.rb
   }
 
-  entity=rbbt/entity{
-   sample.rb
-  }
-
   tasks=sample/tasks{
    vcf.rb
 
@@ -32,6 +28,10 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
     tumor_suppressors.rb
     oncogenes.rb
    }
+  }
+
+  entity=rbbt/entity{
+   sample.rb
   }
  }
  share=share{
