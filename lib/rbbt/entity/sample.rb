@@ -15,6 +15,8 @@ module Sample
   
   Sample.tasks.each do |name, b|
     property name.to_sym => :single do |run=true|
+    sample_code = self.sample_code
+      iii [sample_code, name]
       job = Sample.job(name.to_sym, sample_code)
       case run
       when nil, TrueClass

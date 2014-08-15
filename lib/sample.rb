@@ -7,9 +7,11 @@ module Sample
     def dir
       @dir  ||= begin
                 if Rbbt.etc.sample_repo.exists?
-                  Path.setup(File.expand_path(Rbbt.etc.sample_repo.read.strip).sub(/\/samples$/,''))
+                  path = Rbbt.etc.sample_repo.read.strip
+                  Log.debug "Loading sample repo: #{ path } from #{Rbbt.etc.sample_repo.find}"
+                  Path.setup(File.expand_path(path).sub(/\/samples$/,''))
                 else
-                  Rbbt.data
+                  Rbbt.share.data
                 end
               end
       @dir
