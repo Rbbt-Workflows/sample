@@ -7,8 +7,15 @@
     %dd= Sample.vcf_files(sample).any?
 
 - entity_card.description do
-  - good = sample.good_quality_mutations
-  == Good mutations in #{ sample }: #{good.length}
+
+  = table :table_id => "Mutation details for #{ sample }" do
+    - sample.mutation_details
+
+  = table :table_id => "Mutation genes for #{ sample }" do
+    - sample.mutation_genes
+
+  = table :table_id => "Mutation annotations for mutated isoforms for #{sample}" do
+    - sample.mutation_mi_annotations
 
 - entity_card.action_controller = default_action_controller sample
 

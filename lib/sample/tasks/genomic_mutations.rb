@@ -3,6 +3,7 @@ Workflow.require_workflow "Sequence"
 Workflow.require_workflow "EVS"
 Workflow.require_workflow "Genomes1000"
 Workflow.require_workflow "GERP"
+Workflow.require_workflow "MutationSignatures"
 
 module Sample
 
@@ -124,5 +125,27 @@ module Sample
     end
 
     tsv
+  end
+
+  dep :genomic_mutations
+  dep :organism
+  dep :watson
+  dep Sequence, :reference, :positions => :genomic_mutations, :organism => :organism
+  dep Sequence, :type, :mutations => :genomic_mutations, :organism => :organism, :watson => :watson
+  dep MutationSignatures, :mutation_context, :mutations => :genomic_mutations, :organism => :organism
+  task :mutation_details => :tsv do
+    pasted = TSV.paste_streams([step(:reference), step(:type), step(:mutation_context)], :sort => true)
+
+    dumper = TSV::Dumper.new :key_field => "Genomic Mutation",
+      :fields => ["Chromosome Name", "Position", "Reference", "Change", "Context change", "Type"],
+      :type => :list, :namespace => organism
+
+    dumper.init
+    TSV.traverse pasted, :into => dumper do |mutation, *values|
+      reference,type, context = values.flatten
+      mutation = mutation.first if Array === mutation
+      chromosome, position, change, *rest = mutation.split":"
+      [mutation, [chromosome, position, reference, change, context, type]]
+    end
   end
 end
