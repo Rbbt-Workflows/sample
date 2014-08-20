@@ -47,6 +47,9 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
    tasks.haml
    entity=entity{
     Sample.haml
+    Sample=Sample{
+     mutation_annotations.haml
+    }
    }
   }
  }

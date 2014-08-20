@@ -14,9 +14,11 @@ module Sample
   end
   
   Sample.tasks.each do |name, b|
-    property name.to_sym => :single do |run=true|
-    sample_code = self.sample_code
-      job = Sample.job(name.to_sym, sample_code)
+    property name.to_sym => :single do |run=true, options={}|
+      run, options = true, run if Hash === run
+
+      sample_code = self.sample_code
+      job = Sample.job(name.to_sym, sample_code, options)
       case run
       when nil, TrueClass
         job.run 

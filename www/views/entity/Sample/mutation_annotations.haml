@@ -1,0 +1,9 @@
+- sample = entity
+= action_card_render ActionCard.new do
+
+  = table :table_id => "Mutation annotations for #{sample}" do
+    - sample.genomic_mutation_annotations
+
+  = table :table_id => "Mutation annotations for mutated (principal) isoforms for #{sample}" do
+    - sample.mutation_mi_annotations(:principal => true)
+
