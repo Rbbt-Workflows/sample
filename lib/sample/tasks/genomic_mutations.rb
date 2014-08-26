@@ -20,7 +20,7 @@ module Sample
                  TSV.get_stream Open.open(file)
                end
              else
-               TSV.get_stream Sample.mutations sample
+               TSV.get_stream Sample.mutations(sample)
              end
     CMD.cmd('sort -u', :in => stream, :pipe => true).read
   end

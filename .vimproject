@@ -36,6 +36,7 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
  }
  share=share{
   rbbt_commands=rbbt_commands{
+   bootstrap
    list
   }
  }

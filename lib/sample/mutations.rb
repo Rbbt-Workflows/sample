@@ -22,25 +22,20 @@ module Sample
     sample_dir = sample_dir(sample)
     raise "No sample data for: #{ sample }" if sample_dir.nil?
 
-    return sample_dir if sample_dir.exists? and not File.directory?(sample_dir)
+    return sample_dir if sample_dir.exists? and not sample_dir.directory?
     if sample_dir.genotype.exists?
       return sample_dir.genotype.find
     else
-      Open.write(sample_dir.genotype.find) do |fgenotype|
-        stream = Misc.open_pipe do |sin|
-          vcf_files(sample).each do |file|
-            job = Sequence.job(:genomic_mutations, sample, :vcf_file => file, :quality => nil)
-            job.recursive_clean
-            job.run(true)
-            TSV.traverse job, :type => :array do |line|
-              sin.puts line
-            end
+      Misc.open_pipe do |sin|
+        vcf_files(sample).each do |file|
+          job = Sequence.job(:genomic_mutations, sample, :vcf_file => file, :quality => nil)
+          job.recursive_clean
+          job.run(true)
+          TSV.traverse job, :type => :array do |line|
+            sin.puts line
           end
         end
-        sorted = CMD.cmd("sort -u", :in => stream, :pipe => true)
-        Misc.consume_stream sorted, false, fgenotype
       end
-      return sample_dir.genotype.find
     end
   end
   

@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+
+samples = Sample.all_samples
+
+Misc.bootstrap samples do |sample|
+  Sample.setup(sample)
+  sample.mutation_genes
+  sample.genomic_mutation_annotations
+  sample.mutation_mi_annotations
+  sample.mutation_details
+  sample.affected_alleles
+  sample.broken_alleles
+end
