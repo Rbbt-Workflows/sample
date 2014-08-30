@@ -3,17 +3,17 @@ Workflow.require_workflow "Sequence"
 module Sample
 
   dep :genomic_mutations
-  dep Sequence, :affected_genes, :mutations => :genomic_mutations, :organism => :organism, :watson => :watson
+  dep Sequence, :affected_genes, :mutations => :genomic_mutations, :vcf => false, :organism => :organism, :watson => :watson
   task :affected_genes => :tsv do 
-    Misc.sensiblewrite(path, TSV.get_stream(step(:affected_genes)))
-    path.tsv
+    TSV.get_stream(step(:affected_genes))
   end
 
   dep :genomic_mutations
   dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :vcf => false, :organism => :organism, :watson => :watson
   task :consequence => :tsv do 
-    Misc.sensiblewrite(path, TSV.get_stream(step(:mutated_isoforms_fast)))
-    path.tsv
+    stream = TSV.get_stream step(:mutated_isoforms_fast)
+    Misc.sensiblewrite(path, stream)
+    nil
   end
 
   dep :consequence
@@ -21,17 +21,17 @@ module Sample
     stream = TSV.traverse step(:consequence), :into => :stream do |mutation,isoforms|
       isoforms.select{|i| i =~ /ENSP/ } * "\n"
     end
-    CMD.cmd("sort -u > '#{path}'", :in => stream.read)
-    path.list
+    Misc.sensiblewrite(path, CMD.cmd("sort -u", :in => stream,:pipe => true))
+    nil
   end
 
   dep :isoforms
   task :ns_mutated_isoforms => :array do 
     stream = TSV.traverse step(:isoforms), :type => :array, :into => :stream do |line|
-      next if line =~ /:([A-Z*])\d+([A-Z*])/ and $1 == $2 or line =~ /UTR/
+      next if line.empty? or (line =~ /:([A-Z*])\d+([A-Z*])/ and $1 == $2) or line =~ /UTR/
       line
     end
     Misc.sensiblewrite(path, stream)
-    path.list
+    nil
   end
 end

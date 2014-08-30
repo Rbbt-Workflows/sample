@@ -17,12 +17,13 @@ module Sample
                  job = Sequence.job(:genomic_mutations, sample, :vcf_file => file)
                  TSV.get_stream job.run(true)
                else
-                 TSV.get_stream Open.open(file)
+                 TSV.get_stream file
                end
              else
                TSV.get_stream Sample.mutations(sample)
              end
-    CMD.cmd('sort -u', :in => stream, :pipe => true).read
+    Misc.sensiblewrite(path, CMD.cmd('sort -u |grep ":"', :in => stream, :pipe => true))
+    nil
   end
 
   dep :genomic_mutations

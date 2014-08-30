@@ -24,7 +24,7 @@ module Sample
         job.run 
       when :path
         job.run(true).join.path
-      when :job
+      else
         job
       end
     end
