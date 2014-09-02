@@ -20,7 +20,7 @@ module Sample
     dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Mutated isoform"] + annotations.fields, :type => :double
     dumper.init
 
-    TSV.traverse step(:consequence), :into => dumper do |mutation, isoforms|
+    TSV.traverse step(:consequence), :bar => "Mutation MI annotations", :into => dumper do |mutation, isoforms|
       mutation = mutation.first if Array === mutation
       values = []
       isoforms.each do |iso|

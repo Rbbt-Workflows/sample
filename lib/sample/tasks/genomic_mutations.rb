@@ -53,9 +53,7 @@ module Sample
   end
 
   dep :genomic_mutations
-  dep :organism
-  dep :watson
-  dep Sequence, :genes, :positions => :genomic_mutations, :organism => :organism, :watson => :watson
+  dep Sequence, :genes, :positions => :genomic_mutations, :organism => :organism, :watson => :watson, :vcf => false
   dep :mutated_isoform
   dep :damaged_isoform
   dep :affected_splicing
