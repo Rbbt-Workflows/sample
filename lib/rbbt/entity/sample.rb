@@ -5,6 +5,8 @@ module Sample
 
   self.annotation :cohort
 
+  self.format = ["Sample name", "Sample ID"]
+
   property :sample_code => :single do
     if cohort.nil? or cohort.empty? or self =~ /^#{ cohort }:/
       self
@@ -21,7 +23,7 @@ module Sample
       job = Sample.job(name.to_sym, sample_code, options)
       case run
       when nil, TrueClass
-        job.run 
+        job.run
       when :path
         job.run(true).join.path
       else

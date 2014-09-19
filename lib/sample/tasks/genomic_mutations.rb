@@ -22,7 +22,7 @@ module Sample
              else
                TSV.get_stream Sample.mutations(sample)
              end
-    Misc.sensiblewrite(path, CMD.cmd('sort -u |grep ":"', :in => stream, :pipe => true))
+    Misc.sensiblewrite(path, CMD.cmd('sort -u | grep ":" | sed "s/^M:/MT:/" ', :in => stream, :pipe => true, :no_fail => true))
     nil
   end
 

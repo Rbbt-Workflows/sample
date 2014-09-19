@@ -11,18 +11,17 @@ module Sample
   dep :genomic_mutations
   dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :vcf => false, :organism => :organism, :watson => :watson
   task :consequence => :tsv do 
-    stream = TSV.get_stream step(:mutated_isoforms_fast)
-    Misc.sensiblewrite(path, stream)
-    nil
+    TSV.get_stream step(:mutated_isoforms_fast)
   end
 
   dep :consequence
   task :isoforms => :array do 
     stream = TSV.traverse step(:consequence), :into => :stream do |mutation,isoforms|
-      isoforms.select{|i| i =~ /ENSP/ } * "\n"
+      mis = isoforms.select{|i| i =~ /ENSP/ } 
+      next if mis.empty?
+      mis * "\n"
     end
-    Misc.sensiblewrite(path, CMD.cmd("sort -u", :in => stream,:pipe => true))
-    nil
+    CMD.cmd("sort -u", :in => stream,:pipe => false).read.split("\n")
   end
 
   dep :isoforms
