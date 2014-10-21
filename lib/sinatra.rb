@@ -1,4 +1,6 @@
 require 'rbbt/entity/sample'
+require 'rbbt/entity/InterPro'
+
 register Sinatra::RbbtRESTEntity
 
 Sample.module_eval do
@@ -7,5 +9,4 @@ Sample.module_eval do
   export_asynchronous :genomic_mutations
   export_asynchronous :mutation_genes
 end
-
 
