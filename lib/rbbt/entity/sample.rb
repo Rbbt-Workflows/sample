@@ -32,9 +32,19 @@ module Sample
     end
   end
 
+  property :has_vcf? => :single do
+    Sample.vcf_files(sample).any?
+  end
+
   property :has_genotype? => :single do
     Sample.sample_dir(sample_code)
   end
+
+  property :has_gene_expression? => :single do
+    Sample.matrices(cohort).include?("gene_expression") and
+    TSV.parse_header(Sample.matrix_file(cohort, :gene_expression)).fields.include?(self)
+  end
+
 
   property :mutations => :single do
     mutations = self.genomic_mutations

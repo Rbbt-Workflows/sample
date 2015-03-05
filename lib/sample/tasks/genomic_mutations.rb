@@ -58,10 +58,11 @@ module Sample
   dep :damaged_isoform
   dep :affected_splicing
   dep :broken
+  dep :homozygous
   task :mutation_genes  => :tsv do
     mutation_gene_info = {}
+    homozygous = step(:homozygous).load
 
-      
     TSV.traverse step(:genes) do |mutation, genes|
       mutation = mutation.first if Array === mutation
       genes.each do |gene|
@@ -69,6 +70,7 @@ module Sample
         mutation_gene_info[mutation][gene] ||= {}
       end
     end
+
     TSV.traverse step(:mutated_isoform) do |gene, mutations|
       gene = gene.first if Array === gene
       mutations.each do |mutation|
@@ -105,22 +107,26 @@ module Sample
       end
     end
 
-    tsv = TSV.setup({}, :key_field => "Genomic Mutation", :fields => ["Ensembl Gene ID", "affected", "damaged", "splicing", "broken", "missing"], :type => :double, :namespace => organism)
+    tsv = TSV.setup({}, :key_field => "Genomic Mutation", :fields => ["Ensembl Gene ID", "affected", "damaged", "splicing", "broken", "homozygous"], :type => :double, :namespace => organism)
 
     mutation_gene_info.each do |mutation, gene_info|
       genes = {}
       gene_info.each do |gene,info|
-        genes[gene] ||= {:mutated => [], :damaged => [], :splicing => [], :broken => []}
+        genes[gene] ||= {:mutated => [], :damaged => [], :splicing => [], :broken => [], :homozygous => []}
         genes[gene][:mutated] << mutation if info[:mutated]
         genes[gene][:damaged] << mutation if info[:damaged]
         genes[gene][:splicing] << mutation if info[:splicing]
         genes[gene][:broken] << mutation if info[:broken]
-        genes[gene][:missing] << mutation if info[:missing]
+        genes[gene][:homozygous] << mutation if homozygous.include? mutation
       end
       values = genes.collect{|gene,info|
-        [gene] + info.values_at(:mutated, :damaged, :splicing, :broken, :missing).collect{|v| (v and v.any?) ? "true" : "false" }
+        [gene] + info.values_at(:mutated, :damaged, :splicing, :broken, :homozygous).collect{|v| (v and v.any?) ? "true" : "false" }
       }
       tsv[mutation] = Misc.zip_fields(values)
+    end
+
+    step(:genomic_mutations).load.each do |mutation|
+      tsv[mutation] = [nil] * tsv.fields.length unless tsv.include? mutation
     end
 
     tsv
@@ -145,6 +151,40 @@ module Sample
       mutation = mutation.first if Array === mutation
       chromosome, position, change, *rest = mutation.split":"
       [mutation, [chromosome, position, reference, change, context, type]]
+    end
+  end
+
+  dep :genomic_mutations
+  dep :organism
+  dep :watson
+  dep Sequence, :reference, :positions => :genomic_mutations, :organism => :organism
+  dep Sequence, :type, :mutations => :genomic_mutations, :organism => :organism, :watson => :watson
+  dep MutationSignatures, :mutation_context, :mutations => :genomic_mutations, :organism => :organism
+  dep :extended_vcf
+  task :mutation_details => :tsv do
+    if Sample.vcf_files(sample).any?
+      exteded_vcf_step = step(:extended_vcf)
+      exteded_vcf = TSV.open(exteded_vcf_step.file(exteded_vcf_step.run))
+      code = sample.split(":").last
+      good_fields = exteded_vcf.fields.select{|f| f =~ /#{code}:/ or f == "Quality"}
+      exteded_vcf = exteded_vcf.slice(good_fields)
+      exteded_vcf.key_field = "Genomic Position"
+      pasted = TSV.paste_streams([step(:reference), step(:type), step(:mutation_context), exteded_vcf.dumper_stream], :sort => true)
+    else
+      good_fields = []
+      pasted = TSV.paste_streams([step(:reference), step(:type), step(:mutation_context)], :sort => true)
+    end
+
+    dumper = TSV::Dumper.new :key_field => "Genomic Mutation",
+      :fields => ["Chromosome Name", "Position", "Reference", "Change", "Context change", "Type"] + good_fields.collect{|f| f.split(":").last},
+      :type => :list, :namespace => organism
+
+    dumper.init
+    TSV.traverse pasted, :into => dumper do |mutation, *values|
+      reference,type, context, *vcf = values.flatten
+      mutation = mutation.first if Array === mutation
+      chromosome, position, change, *rest = mutation.split":"
+      [mutation, [chromosome, position, reference, change, context, type] + vcf]
     end
   end
 end

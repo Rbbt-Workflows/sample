@@ -5,6 +5,7 @@ require 'sample/tasks/mutated_isoforms/damage'
 module Sample
 
   dep :structure_annotations 
+  dep :structure_neighbour_annotations 
   dep :interfaces 
   dep :db_NSFP 
   task :mutated_isoform_annotations => :tsv do 

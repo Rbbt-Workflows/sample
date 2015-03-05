@@ -1,10 +1,11 @@
+- require 'rbbt/tsv/excel'
 - sample = entity
 - entity_card = EntityCard.new(sample)
 - entity_card.name = entity
 - entity_card.meta do
   %dl
     %dt From VCF
-    %dd= Sample.vcf_files(sample).any?
+    %dd= Sample.vcf_files([sample.study, sample] * ":").any?
 
 - entity_card.description do
 
@@ -23,11 +24,30 @@
       %dt Damaged genes
       %dd= sample.get_genes(:damaged).list_link :length, "Damaged genes in #{ sample }"
 
+    - if Sample.vcf_files([sample.study,sample] * ":").any?
+      :documentation
+
+        Explanation of VCF fields 
+
+          * RES:   Reliability score (1=good)
+          * GT:    Genotype
+          * GQ:    Genotype Quality
+          * GL:    Likelihoods for RR,RA,AA genotypes (R=ref,A=alt)
+          * DP:    Number high-quality bases
+          * DV:    Number high-quality non-reference bases
+          * SP:    Phred-scaled strand bias P-value
+          * PL:    List of Phred-scaled genotype likelihoods
+          * AC:    Allele count in genotypes for each ALT allele, in the same order as listed
+          * BC:    Allele counts for A,C,G,T
+
     = table :table_id => "Mutation details for #{ sample }" do
       - sample.mutation_details
 
     = table :table_id => "Mutation genes for #{ sample }" do
       - sample.mutation_genes
+   
+    = resource "Complete #{sample} mutation details.xls", "Download combined tables" do |filename|
+      - sample.mutation_details.attach(sample.mutation_genes).excel(filename, :name => true)
 
 - entity_card.action_controller = default_action_controller sample
 

@@ -1,12 +1,28 @@
 module Sample
 
-  task :extended_vcf => :string do
-    Sample.vcf_files(sample).each do |vcf_file|
-      tsv_stream = Sequence::VCF.open_stream(vcf_file.open, false, false, false)
+  input :file, :file, "Input file"
+  input :vcf, :boolean, "Input file is a VCF", false
+  task :extended_vcf => :string do |file,vcf|
+    if vcf and file
+      vcf_file = file
+      if String === vcf_file and not File.exists? vcf_file
+        vcf_file = StringIO.new vcf_file 
+        name = File.basename(clean_name)
+      else
+        name = File.basename(vcf_file)
+      end
+      tsv_stream = Sequence::VCF.open_stream(vcf_file, false, false, false)
       sorted_tsv_stream = Misc.sort_stream tsv_stream
-      name = File.basename(vcf_file)
       Misc.sensiblewrite(file(name), sorted_tsv_stream)
+    else
+      Sample.vcf_files(sample).each do |vcf_file|
+        tsv_stream = Sequence::VCF.open_stream(vcf_file.open, false, false, false)
+        sorted_tsv_stream = Misc.sort_stream tsv_stream
+        name = File.basename(vcf_file)
+        Misc.sensiblewrite(file(name), sorted_tsv_stream)
+      end
     end
+
     files * "\n"
   end
 
@@ -15,8 +31,13 @@ module Sample
     stream = Misc.open_pipe do |sin|
       step(:extended_vcf).files.each do |basename|
         file = step(:extended_vcf).file(basename)
+        fields = TSV.parse_header(file).fields
         s = sample.split(":").last
-        TSV.traverse file, :fields => [s + ':GT'], :type => :single, :bar => "Homozygous #{basename}" do |mutation,gt|
+        gt_field = [s + ':GT']
+        if not fields.include? gt_field
+          gt_field = fields.select{|f| f =~ /:GT$/}.first
+        end
+        TSV.traverse file, :fields => gt_field, :type => :single, :bar => "Homozygous #{basename}" do |mutation,gt|
           next unless gt == "1/1"
           sin << mutation << "\n"
         end
@@ -66,4 +87,6 @@ module Sample
     end
     files * "\n"
   end
+
+  export_asynchronous :final_vcf
 end
