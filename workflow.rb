@@ -16,12 +16,14 @@ module Sample
     Sample.watson sample
   end
 
-  task :organism => :string do
-    organism
+  input :organism, :string, "Organism code", nil
+  task :organism => :string do |_organism|
+    _organism || organism
   end
 
-  task :watson => :string do
-    organism
+  input :watson, :boolean, "Mutations given in the watson strand", nil
+  task :watson => :string do |_watson|
+    _watson.nil? ? watson : _watson
   end
 
   def self._sample_dep(workflow, task)

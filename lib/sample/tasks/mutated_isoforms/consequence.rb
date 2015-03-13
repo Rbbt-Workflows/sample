@@ -21,16 +21,14 @@ module Sample
       next if mis.empty?
       mis * "\n"
     end
-    CMD.cmd("sort -u", :in => stream,:pipe => true)
+    CMD.cmd("sort -u", :in => stream, :pipe => true)
   end
 
   dep :isoforms
   task :ns_mutated_isoforms => :array do 
-    stream = TSV.traverse step(:isoforms), :type => :array, :into => :stream do |line|
+    TSV.traverse step(:isoforms), :type => :array, :into => :stream do |line|
       next if line.empty? or (line =~ /:([A-Z*])\d+([A-Z*])/ and $1 == $2) or line =~ /UTR/
       line
     end
-    Misc.sensiblewrite(path, stream)
-    nil
   end
 end
