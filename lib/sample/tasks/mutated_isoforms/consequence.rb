@@ -21,7 +21,7 @@ module Sample
       next if mis.empty?
       mis * "\n"
     end
-    CMD.cmd("sort -u", :in => stream,:pipe => false).read.split("\n")
+    CMD.cmd("sort -u", :in => stream,:pipe => true)
   end
 
   dep :isoforms
