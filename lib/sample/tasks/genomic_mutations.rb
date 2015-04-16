@@ -22,7 +22,7 @@ module Sample
              else
                TSV.get_stream Sample.mutations(sample)
              end
-    Misc.sensiblewrite(path, CMD.cmd('sort -u | grep ":" | sed "s/^M:/MT:/" ', :in => stream, :pipe => true, :no_fail => true))
+    Misc.sensiblewrite(path, CMD.cmd('grep ":" | sed "s/^M:/MT:/" | sort -u -k1,1 -k2,2 -g -t:', :in => stream, :pipe => true, :no_fail => true))
     nil
   end
 
@@ -60,6 +60,8 @@ module Sample
   dep :broken
   dep :homozygous
   task :mutation_genes  => :tsv do
+    Step.wait_for_jobs dependencies
+
     mutation_gene_info = {}
     homozygous = step(:homozygous).load
 
@@ -132,27 +134,27 @@ module Sample
     tsv
   end
 
-  dep :genomic_mutations
-  dep :organism
-  dep :watson
-  dep Sequence, :reference, :positions => :genomic_mutations, :organism => :organism
-  dep Sequence, :type, :mutations => :genomic_mutations, :organism => :organism, :watson => :watson
-  dep MutationSignatures, :mutation_context, :mutations => :genomic_mutations, :organism => :organism
-  task :mutation_details => :tsv do
-    pasted = TSV.paste_streams([step(:reference), step(:type), step(:mutation_context)], :sort => true)
+  #dep :genomic_mutations
+  #dep :organism
+  #dep :watson
+  #dep Sequence, :reference, :positions => :genomic_mutations, :organism => :organism
+  #dep Sequence, :type, :mutations => :genomic_mutations, :organism => :organism, :watson => :watson
+  #dep MutationSignatures, :mutation_context, :mutations => :genomic_mutations, :organism => :organism
+  #task :mutation_details => :tsv do
+  #  pasted = TSV.paste_streams([step(:reference), step(:type), step(:mutation_context)], :sort => true)
 
-    dumper = TSV::Dumper.new :key_field => "Genomic Mutation",
-      :fields => ["Chromosome Name", "Position", "Reference", "Change", "Context change", "Type"],
-      :type => :list, :namespace => organism
+  #  dumper = TSV::Dumper.new :key_field => "Genomic Mutation",
+  #    :fields => ["Chromosome Name", "Position", "Reference", "Change", "Context change", "Type"],
+  #    :type => :list, :namespace => organism
 
-    dumper.init
-    TSV.traverse pasted, :into => dumper do |mutation, *values|
-      reference,type, context = values.flatten
-      mutation = mutation.first if Array === mutation
-      chromosome, position, change, *rest = mutation.split":"
-      [mutation, [chromosome, position, reference, change, context, type]]
-    end
-  end
+  #  dumper.init
+  #  TSV.traverse pasted, :into => dumper do |mutation, *values|
+  #    reference,type, context = values.flatten
+  #    mutation = mutation.first if Array === mutation
+  #    chromosome, position, change, *rest = mutation.split":"
+  #    [mutation, [chromosome, position, reference, change, context, type]]
+  #  end
+  #end
 
   dep :genomic_mutations
   dep :organism
@@ -186,5 +188,26 @@ module Sample
       chromosome, position, change, *rest = mutation.split":"
       [mutation, [chromosome, position, reference, change, context, type] + vcf]
     end
+  end
+
+  helper :eid do
+    retur "E120"
+  end
+
+  dep :genomic_mutations
+  dep do |jobname, options|
+    eid = "E120"
+    Workflow.require_workflow "RegEdges"
+    %w(dyadic enh prom).collect do |type|
+      RegEdges.job(:annotate, jobname, :mutations => Sample.mutations(jobname), :type => type, :tissue => eid)
+    end
+  end
+  task :regulatory_mutations => :tsv do
+    tissues = []
+    dependencies = self.dependencies[1..-1]
+    dependency_streams = dependencies.collect{|dep| iii dep.inputs; tissues << dep.inputs[:tissue]; TSV.get_stream dep } 
+    tsv = TSV.open(TSV.paste_streams(dependencies))
+    tsv.fields = tissues.collect{|t| [t + " Associated Gene Name", t + " Score"] }.flatten
+    tsv
   end
 end

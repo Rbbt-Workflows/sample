@@ -27,11 +27,11 @@ module Sample
   task :oncogenes => :tsv do
     affected_alleles = step(:affected_alleles).load
     mutated_isoform = step(:mutated_isoform).load
-    damaging = step(:damaging).load
+    damaging = step(:damaging).load.values.flatten.compact.uniq
 
     TSV.traverse Sample.oncg_quality.keys, :into => :dumper, :fields => ["Quality", "Status"], :key_field => "Ensembl Gene ID", :namespace => organism, :type => :list do |gene|
       next unless affected_alleles.include? gene
-      status = if mutated_isoform.include?(gene) and (mutated_isoform[gene] & damaging).any?
+      status = if mutated_isoform[gene] and (mutated_isoform[gene] & damaging).any?
                  "DAMAGED"
                else
                  "AFFECTED"

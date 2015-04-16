@@ -1,5 +1,6 @@
 require 'rbbt-util'
 require 'sample/mutations'
+require 'sample/cnv'
 
 module Sample
   class << self
@@ -20,7 +21,6 @@ module Sample
     def sample_repo
       @sample_repo ||= dir.samples
       @sample_repo
-
     end
 
     def study_repo
@@ -43,5 +43,42 @@ module Sample
   def self.all_studies
     study_repo.glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }
   end
+
+  def self.study_dir(code)
+    return study_repo[code] if study_repo[code].exists?
+    return project_repo[code] if project_repo[code].exists?
+    return project_repo["*"][code].glob.first if project_repo["*"][code].glob.any?
+    raise "Study not found in #{project_repo.find}: #{code}"
+  end
+
+  def self.sample_dir(sample)
+
+    if sample =~ /(.*):(.*)/
+      code, sample = $1, $2
+      study_dir = study_dir(code)
+      return study_dir[sample] if study_dir[sample].exists?
+      return study_dir.genotypes[sample] if study_dir.genotypes[sample].exists?
+      #return study_dir.genotypes.vcf if study_dir.genotypes.vcf[sample + ".vcf*"].glob.any?
+      return study_dir
+    else
+      return sample_repo[sample] 
+    end
+
+    nil
+  end
+
+  def self.metadata(sample)
+    sample_dir = sample_dir(sample)
+    return {} if sample_dir.nil?
+    sample_dir = sample_dir.annotate sample_dir.gsub(/genotypes\/.*/,'')
+    metadata_file = sample_dir.metadata
+    metadata_file = sample_dir["metadata.yaml"] unless metadata_file.exists?
+    metadata_file.exists? ? metadata_file.yaml : {}
+  end
+
+  def self.organism(sample)
+    metadata(sample)[:organism] || "Hsa/jan2013"
+  end
+
 end
 

@@ -5,7 +5,7 @@ module Sample
   dep :homozygous
   task :affected_alleles => :tsv do
     genes = {}
-    Step.wait_for_jobs [step(:affected_splicing)]
+    Step.wait_for_jobs dependencies
     homozygous = Set.new step(:homozygous).load
     TSV.traverse step(:affected_splicing) do |gene, mutations|
       mutations.collect do |mutation|

@@ -8,7 +8,7 @@ module Sample
   end
 
   dep :db_NSFP
-  input :damage_field, :string, "DbNSFP column value to threshold", "RadialSVM_score"
+  input :damage_field, :string, "DbNSFP column value to threshold", "MetaSVM_score"
   input :damage_threshold, :float, "Min. value threshold", 0
   task :damaged_mi => :array do |field,threshold|
     TSV.traverse step(:db_NSFP), :into => :stream, :fields => [field], :type => :single, :cast => :to_f do |mutation, value|
@@ -29,6 +29,8 @@ module Sample
   dep :truncated_mi
   dep :consequence
   task :damaging => :tsv do
+    Step.wait_for_jobs dependencies
+
     damaged_mi = Set.new(step(:damaged_mi).load)
     truncated_mi = Set.new(step(:truncated_mi).load)
 

@@ -33,7 +33,7 @@ module Sample
   end
 
   property :has_vcf? => :single do
-    Sample.vcf_files(sample).any?
+    Sample.vcf_files(self).any?
   end
 
   property :has_genotype? => :single do
