@@ -22,6 +22,10 @@ module Sample
     return []
   end
 
+  def self.has_cnv?(sample)
+    cnv_vcf_files(sample).any?
+  end
+
   def self.cnvs(sample)
     sample_dir = sample_dir(sample)
     raise "No sample data for: #{ sample }" if sample_dir.nil? 

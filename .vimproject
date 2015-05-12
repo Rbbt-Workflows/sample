@@ -7,10 +7,13 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
   sample.rb
   sample=sample{
    mutations.rb
+   cnv.rb
   }
 
   tasks=sample/tasks{
    vcf.rb
+
+   cnvs.rb
 
    genomic_mutations.rb
 
@@ -54,4 +57,5 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
    }
   }
  }
-}
+
+

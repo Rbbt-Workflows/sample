@@ -18,7 +18,7 @@ module Sample
     Step.wait_for_jobs dependencies
     annotations = TSV.open(step(:mutated_isoform_annotations), :unnamed => true)
 
-    dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Mutated Isoform"] + annotations.fields, :type => :double
+    dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Mutated Isoform"] + annotations.fields, :type => :double, :namespace => organism
     dumper.init
 
     TSV.traverse step(:consequence), :bar => "Mutation MI annotations", :into => dumper do |mutation, isoforms|

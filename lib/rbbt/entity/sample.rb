@@ -35,6 +35,9 @@ module Sample
   property :has_vcf? => :single do
     Sample.vcf_files(self).any?
   end
+  property :has_cnv? => :single do
+    Sample.has_cnv?(self)
+  end
 
   property :has_genotype? => :single do
     Sample.sample_dir(sample_code)

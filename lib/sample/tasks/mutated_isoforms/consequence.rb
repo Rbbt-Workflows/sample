@@ -26,7 +26,7 @@ module Sample
 
   dep :isoforms
   task :ns_mutated_isoforms => :array do 
-    TSV.traverse step(:isoforms), :type => :array, :into => [] do |line|
+    TSV.traverse step(:isoforms), :type => :array, :into => :stream do |line|
       next if line.empty? or (line =~ /:([A-Z*])\d+([A-Z*])/ and $1 == $2) or line =~ /UTR/
       line
     end
