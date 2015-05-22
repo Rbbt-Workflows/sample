@@ -11,9 +11,21 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
   }
 
   tasks=sample/tasks{
-   vcf.rb
+   snv.rb
+   snv=snv{
+    vcf.rb
+    genomic_mutations.rb
+    features.rb
+    mutated_isoforms.rb
 
-   cnvs.rb
+    zygosity.rb
+
+    damage.rb
+
+    genes.rb
+
+    structureppi.rb
+   }
 
    genomic_mutations.rb
 
@@ -31,6 +43,12 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
     tumor_suppressors.rb
     oncogenes.rb
    }
+
+   cnvs.rb
+
+
+
+   vcf.rb
   }
 
   entity=rbbt/entity{
@@ -57,5 +75,4 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
    }
   }
  }
-
 

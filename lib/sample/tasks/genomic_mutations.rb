@@ -28,13 +28,14 @@ module Sample
 
   dep :genomic_mutations
   dep Sequence, :genes, :positions => :genomic_mutations, :organism => :organism, :watson => :watson
-  task :exome_only => :string do
+  task :exome_only => :boolean do
     count = 0
-    genes = dependencies.first
+    mutations, genes = dependencies
     TSV.traverse genes do |mutation, genes|
+      iii [mutation, genes]
       count += 1 if genes and genes.any?
     end
-    res = count > step(:genomic_mutations).load.length * 0.5
+    res = count > mutations.load.length.to_f * 0.5
     res
   end
 
@@ -134,6 +135,13 @@ module Sample
     tsv
   end
 
+  dep :mutation_genes
+  task :gene_status => :tsv do
+    TSV.traverse step(:mutation_genes) do |mutation, values|
+      gene, rest = values
+    end
+  end
+
   #dep :genomic_mutations
   #dep :organism
   #dep :watson
@@ -191,7 +199,7 @@ module Sample
   end
 
   helper :eid do
-    retur "E120"
+    "E120"
   end
 
   dep :genomic_mutations
