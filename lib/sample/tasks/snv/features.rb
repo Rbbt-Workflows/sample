@@ -23,4 +23,10 @@ module Sample
   task :genomic_mutation_consequence => :tsv do 
     TSV.get_stream step(:mutated_isoforms_fast)
   end
+
+  dep :genomic_mutations
+  dep Sequence, :TSS, :positions => :genomic_mutations, :vcf => false, :organism => :organism, :watson => :watson
+  task :genomic_mutation_TSS => :tsv do 
+    TSV.get_stream step(:TSS)
+  end
 end

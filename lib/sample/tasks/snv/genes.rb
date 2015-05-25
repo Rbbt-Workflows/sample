@@ -5,6 +5,7 @@ module Sample
   dep :genomic_mutation_gene_overlaps
   dep :genomic_mutation_splicing_consequence
   dep :genomic_mutation_consequence
+  dep :genomic_mutation_TSS
   task :mutation_info => :tsv do
     Step.wait_for_jobs dependencies
     ns_mi, damaged_mi, *annotations = dependencies
@@ -16,14 +17,15 @@ module Sample
 
     ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :unnamed => true, :persist => true
 
-    dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Ensembl Gene ID", "overlapping", "affected", "broken", "splicing", "mutated_isoform", "damaged_mutated_isoform"], :type => :double, :namespace => organism
+    dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Ensembl Gene ID", "overlapping", "affected", "broken", "splicing", "mutated_isoform", "damaged_mutated_isoform", "TSS"], :type => :double, :namespace => organism
     dumper.init
     TSV.traverse pasted_io, :into => dumper, :bar => true do |mut,values|
       next if values.nil? or values.flatten.compact.empty?
-      overlapping, splicing, consequence = values 
+      overlapping, splicing, consequence, tss = values 
       gene_info = {}
       overlapping.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :overlapping} if overlapping
       splicing.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :splicing} if splicing
+      tss.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :tss} if splicing
       consequence.each do |mi| 
         next unless ns_mi.include? mi
         g = ensp2ensg[mi.partition(":").first]
@@ -42,6 +44,7 @@ module Sample
         value << (tags.include?(:splicing) ? 'true' : 'false')
         value << (tags.include?(:mutated_isoform) ? 'true' : 'false')
         value << (tags.include?(:damaged_mutated_isoform) ? 'true' : 'false')
+        value << (tags.include?(:tss) ? 'true' : 'false')
         values << value
       end
       mut = mut.first if Array === mut
