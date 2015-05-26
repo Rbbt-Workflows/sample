@@ -15,7 +15,15 @@ module Sample
              else
                TSV.get_stream Sample.mutations(sample)
              end
-    Misc.sensiblewrite(path, CMD.cmd('grep ":" | sed "s/^M:/MT:/" | sort -u -k1,1 -k2,2 -g -t:', :in => stream, :pipe => true, :no_fail => true))
+    sorted = CMD.cmd('grep ":" | sed "s/^M:/MT:/" | sort -u -k1,1 -k2,2 -t:', :in => stream, :pipe => true, :no_fail => true)
+    mappable_regions = Sample.mappable_regions(sample)
+    if mappable_regions
+      mappable_regions_io = Open.open(mappable_regions)
+      mappable = Misc.select_ranges(sorted, mappable_regions_io, ":")
+      Misc.sensiblewrite(path, CMD.cmd('cut -f1', :in => mappable, :pipe => true, :no_fail => true))
+    else
+      Misc.sensiblewrite(path, sorted)
+    end
     nil
   end
 

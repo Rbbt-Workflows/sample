@@ -76,6 +76,18 @@ module Sample
     metadata_file.exists? ? metadata_file.yaml : {}
   end
 
+  def self.mappable_regions(sample)
+    sample_dir = sample_dir(sample)
+    return {} if sample_dir.nil?
+    sample_dir = sample_dir.annotate sample_dir.gsub(/genotypes\/.*/,'')
+    mappable_regions = sample_dir.mappable_regions
+    if mappable_regions.exists?
+      mappable_regions
+    else
+      nil
+    end
+  end
+
   def self.organism(sample)
     metadata(sample)[:organism] || "Hsa/jan2013"
   end
