@@ -15,7 +15,7 @@ module Sample
              else
                TSV.get_stream Sample.mutations(sample)
              end
-    sorted = CMD.cmd('grep ":" | sed "s/^M:/MT:/" | sort -u -k1,1 -k2,2 -t:', :in => stream, :pipe => true, :no_fail => true)
+    sorted = CMD.cmd('grep ":" | sed "s/^M:/MT:/" | sort -u -k1,1 -k2,2n -t:', :in => stream, :pipe => true, :no_fail => true)
     mappable_regions = Sample.mappable_regions(sample)
     if mappable_regions
       mappable_regions_io = Open.open(mappable_regions)

@@ -32,7 +32,6 @@ module Sample
     count = 0
     mutations, genes = dependencies
     TSV.traverse genes do |mutation, genes|
-      iii [mutation, genes]
       count += 1 if genes and genes.any?
     end
     res = count > mutations.load.length.to_f * 0.5
