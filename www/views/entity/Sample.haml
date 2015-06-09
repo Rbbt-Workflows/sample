@@ -15,8 +15,8 @@
       %dd= GenomicMutation.setup(sample.genomic_mutations, sample, sample.organism, sample.watson).list_link :length, "Genomic mutations in #{ sample }"
 
       %dt Mutated (principal) Isoforms
-      - isoforms = sample.isoforms(:principal => true)
-      %dd= MutatedIsoform.setup(isoforms, sample.organism).list_link :length, "Mutated Isoforms in #{ sample }"
+      - isoforms = sample.mi(:principal => true)
+      %dd= MutatedIsoform.setup(isoforms, sample.organism).list_link :length, "Mutated (principal) Isoforms in #{ sample }"
 
       %dt Affected genes
       %dd= sample.get_genes(:affected).list_link :length, "Affected genes in #{ sample }"
@@ -44,10 +44,10 @@
       - sample.mutation_details
 
     = table :table_id => "Mutation genes for #{ sample }" do
-      - sample.mutation_genes
+      - sample.mutation_info
    
     = resource "Complete #{sample} mutation details.xls", "Download combined tables" do |filename|
-      - sample.mutation_details.attach(sample.mutation_genes).excel(filename, :name => true)
+      - sample.mutation_details.to_double.attach(sample.mutation_info).excel(filename, :name => true)
 
 - entity_card.action_controller = default_action_controller sample
 

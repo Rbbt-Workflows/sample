@@ -5,6 +5,8 @@ module Sample
     code, sample = $1, $2 if sample =~ /(.*):(.*)/
     return sample_dir.glob('*.vcf*').uniq if sample_dir.glob('*.vcf*').any?
     return sample_dir[sample + '.vcf*'].glob.uniq if sample_dir[sample + '.vcf*'].glob.any?
+    return sample_dir.genotypes[sample + '.vcf*'].glob.uniq if sample_dir.genotypes[sample + '.vcf*'].glob.any?
+    return sample_dir.vcf.glob.uniq if sample_dir.vcf.directory?
     return sample_dir.genotypes.vcf[sample + '.vcf*'].glob.uniq if sample_dir.genotypes.vcf[sample + '.vcf*'].glob.any?
     return []
   end

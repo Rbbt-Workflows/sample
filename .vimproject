@@ -15,17 +15,25 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
    snv=snv{
     vcf.rb
     genomic_mutations.rb
-    features.rb
-    mutated_isoforms.rb
+
+    common.rb
 
     zygosity.rb
+    genes.rb
+
+
+    features.rb
+
+    mutated_isoforms.rb
+
 
     damage.rb
 
-    genes.rb
 
     structureppi.rb
    }
+
+
 
    genomic_mutations.rb
 
@@ -49,6 +57,7 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
 
 
    vcf.rb
+
   }
 
   entity=rbbt/entity{

@@ -1,11 +1,11 @@
 module Sample
 
-  dep :ns_mutated_isoforms
-  dep :damaged_mi
+  dep :mi
+  dep :mi_damaged
   dep :genomic_mutation_gene_overlaps
   dep :genomic_mutation_splicing_consequence
   dep :genomic_mutation_consequence
-  dep :genomic_mutation_TSS
+  dep :TSS
   task :mutation_info => :tsv do
     Step.wait_for_jobs dependencies
     ns_mi, damaged_mi, *annotations = dependencies
@@ -17,7 +17,7 @@ module Sample
 
     ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :unnamed => true, :persist => true
 
-    dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Ensembl Gene ID", "overlapping", "affected", "broken", "splicing", "mutated_isoform", "damaged_mutated_isoform", "TSS"], :type => :double, :namespace => organism
+    dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Ensembl Gene ID", "overlapping", "affected", "broken", "splicing", "mutated_isoform", "damaged_mutated_isoform", "TSS promoter (1000 bp)"], :type => :double, :namespace => organism
     dumper.init
     TSV.traverse pasted_io, :into => dumper, :bar => true do |mut,values|
       next if values.nil? or values.flatten.compact.empty?
@@ -28,6 +28,7 @@ module Sample
       tss.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :tss} if splicing
       consequence.each do |mi| 
         next unless ns_mi.include? mi
+        next unless mi =~ /ENSP/
         g = ensp2ensg[mi.partition(":").first]
         gene_info[g] ||= Set.new; 
         gene_info[g] << :mutated_isoform
@@ -167,6 +168,58 @@ module Sample
   #  TSV.traverse step(:genomic_mutation_gene_overlaps), :into => :stream do |m,genes|
   #    next if genes.nil? or genes.empty?
   #    genes.dup.extend MultipleResult
+  #  end
+  #end
+
+  #dep :ns_mutated_isoforms
+  #dep :damaged_mi
+  #dep :genomic_mutation_gene_overlaps
+  #dep :genomic_mutation_splicing_consequence
+  #dep :genomic_mutation_consequence
+  #dep :genomic_mutation_TSS
+  #task :mutation_info_save => :tsv do
+  #  Step.wait_for_jobs dependencies
+  #  ns_mi, damaged_mi, *annotations = dependencies
+  #  ns_mi = Set.new ns_mi.load
+  #  damaged_mi = Set.new damaged_mi.load
+
+  #  annotation_streams = annotations.collect{|dep| TSV.stream_flat2double(dep.path.open).stream }
+  #  pasted_io = TSV.paste_streams(annotation_streams)
+
+  #  ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :unnamed => true, :persist => true
+
+  #  dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Ensembl Gene ID", "overlapping", "affected", "broken", "splicing", "mutated_isoform", "damaged_mutated_isoform", "TSS promoter (1000 bp)"], :type => :double, :namespace => organism
+  #  dumper.init
+  #  TSV.traverse pasted_io, :into => dumper, :bar => true do |mut,values|
+  #    next if values.nil? or values.flatten.compact.empty?
+  #    overlapping, splicing, consequence, tss = values 
+  #    gene_info = {}
+  #    overlapping.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :overlapping} if overlapping
+  #    splicing.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :splicing} if splicing
+  #    tss.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :tss} if splicing
+  #    consequence.each do |mi| 
+  #      next unless ns_mi.include? mi
+  #      g = ensp2ensg[mi.partition(":").first]
+  #      gene_info[g] ||= Set.new; 
+  #      gene_info[g] << :mutated_isoform
+  #      next unless damaged_mi.include? mi
+  #      gene_info[g] << :damaged_mutated_isoform
+  #    end if consequence
+
+  #    values = []
+  #    gene_info.each do |gene,tags|
+  #      value = [gene]
+  #      value << (tags.include?(:overlapping) ? 'true' : 'false')
+  #      value << (tags.include?(:mutated_isoform) or tags.include?(:splicing) ? 'true' : 'false')
+  #      value << (tags.include?(:damaged_mutated_isoform) or tags.include?(:splicing) ? 'true' : 'false')
+  #      value << (tags.include?(:splicing) ? 'true' : 'false')
+  #      value << (tags.include?(:mutated_isoform) ? 'true' : 'false')
+  #      value << (tags.include?(:damaged_mutated_isoform) ? 'true' : 'false')
+  #      value << (tags.include?(:tss) ? 'true' : 'false')
+  #      values << value
+  #    end
+  #    mut = mut.first if Array === mut
+  #    [mut, Misc.zip_fields(values)]
   #  end
   #end
 

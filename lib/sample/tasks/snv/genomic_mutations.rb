@@ -27,4 +27,39 @@ module Sample
     nil
   end
 
+  Workflow.require_workflow "MutationSignatures"
+  dep :genomic_mutations
+  dep :organism
+  dep :watson
+  dep Sequence, :reference, :positions => :genomic_mutations, :organism => :organism
+  dep Sequence, :type, :mutations => :genomic_mutations, :organism => :organism, :watson => :watson
+  dep MutationSignatures, :mutation_context, :mutations => :genomic_mutations, :organism => :organism
+  dep :extended_vcf
+  task :mutation_details => :tsv do
+    if Sample.vcf_files(sample).any?
+      exteded_vcf_step = step(:extended_vcf)
+      exteded_vcf = TSV.open(exteded_vcf_step.file(exteded_vcf_step.run))
+      code = sample.split(":").last
+      good_fields = exteded_vcf.fields.select{|f| f =~ /#{code}:/ or f == "Quality"}
+      exteded_vcf = exteded_vcf.slice(good_fields)
+      exteded_vcf.key_field = "Genomic Position"
+      pasted = TSV.paste_streams([step(:reference), step(:type), step(:mutation_context), exteded_vcf.dumper_stream], :sort => true)
+    else
+      good_fields = []
+      pasted = TSV.paste_streams([step(:reference), step(:type), step(:mutation_context)], :sort => true)
+    end
+
+    dumper = TSV::Dumper.new :key_field => "Genomic Mutation",
+      :fields => ["Chromosome Name", "Position", "Reference", "Change", "Context change", "Type"] + good_fields.collect{|f| f.split(":").last},
+      :type => :list, :namespace => organism
+
+    dumper.init
+    TSV.traverse pasted, :into => dumper do |mutation, *values|
+      reference,type, context, *vcf = values.flatten
+      mutation = mutation.first if Array === mutation
+      chromosome, position, change, *rest = mutation.split":"
+      [mutation, [chromosome, position, reference, change, context, type] + vcf]
+    end
+  end
+
 end

@@ -15,19 +15,21 @@ module Sample
     end
   end
   
-  Sample.tasks.each do |name, b|
-    property name.to_sym => :single do |run=true, options={}|
-      run, options = true, run if Hash === run
+  def self.update_tasks_property_bindings
+    Sample.tasks.each do |name, b|
+      property name.to_sym => :single do |run=true, options={}|
+        run, options = true, run if Hash === run
 
-      sample_code = self.sample_code
-      job = Sample.job(name.to_sym, sample_code, options)
-      case run
-      when nil, TrueClass
-        job.run
-      when :path
-        job.run(true).join.path
-      else
-        job
+        sample_code = self.sample_code
+        job = Sample.job(name.to_sym, sample_code, options)
+        case run
+        when nil, TrueClass
+          job.run
+        when :path
+          job.run(true).join.path
+        else
+          job
+        end
       end
     end
   end
@@ -56,16 +58,20 @@ module Sample
     mutations
   end
 
+  property :overlapping_genes do
+    self.gene_mutation_status.select(:overlapping).keys
+  end
+
   property :get_genes => :single do |type|
     genes = case type.to_sym
             when :mutated
-              self.overlapping_genes
+              self.gene_mutation_status.select(:overlapping => "true").keys
             when :altered, :affected
-              self.altered_genes
+              self.gene_mutation_status.select(:affected => "true").keys
             when :damaged
-              self.damaged_genes
+              self.gene_mutation_status.select(:damaged_mutated_isoform => "true").keys
             when :broken
-              self.broken_genes
+              self.gene_mutation_status.select(:broken => "true").keys
             else
               raise "Cannot understand #{ type }"
             end

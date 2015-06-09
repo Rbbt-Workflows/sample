@@ -2,11 +2,11 @@ module Sample
 
   dep :genomic_mutation_splicing_consequence
   dep :genomic_mutation_consequence
-  dep :ns_mutated_isoforms
+  dep :mi
   task :compound_mutation_genes => :array do
     Step.wait_for_jobs dependencies
     genes = {}
-    ns_mutated_isoforms = Set.new step(:ns_mutated_isoforms).load
+    ns_mutated_isoforms = Set.new step(:mi).load
     enspt2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Transcript ID", "Ensembl Protein ID"], :unnamed => true, :persist => true
     TSV.traverse TSV.paste_streams(dependencies) do |mut,values|
       values.flatten.each do |v|
