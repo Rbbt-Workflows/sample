@@ -64,7 +64,8 @@ SNVTasks = Proc.new do
   dep :genomic_mutation_consequence
   task :mi => :array do
     io = TSV.traverse step(:genomic_mutation_consequence), :into => :stream do |mut, mis|
-      mis = mis.reject{|mi| mi =~ /:([A-Z])\d+\1$/}
+      mis = mis.reject{|mi| mi =~ /ENST/ || mi =~ /:([A-Z])\d+\1$/}
+      next if mis.empty?
       mis.extend MultipleResult
       mis
     end
