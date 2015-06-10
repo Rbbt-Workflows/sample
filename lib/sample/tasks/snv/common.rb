@@ -64,12 +64,40 @@ SNVTasks = Proc.new do
   dep :genomic_mutation_consequence
   task :mi => :array do
     io = TSV.traverse step(:genomic_mutation_consequence), :into => :stream do |mut, mis|
-      mis = mis.reject{|mi| mi =~ /ENST/ || mi =~ /:([A-Z])\d+\1$/}
+      mis = mis.reject{|mi| mi =~ /ENST|:([*A-Z])\d+\1$/}
       next if mis.empty?
       mis.extend MultipleResult
       mis
     end
     CMD.cmd('shuf', :in => io, :pipe => true)
+  end
+
+  dep :mi
+  task :mi_truncated => :array do 
+    ensp2sequence = Organism.protein_sequence(organism).tsv :persist => true, :unnamed => true
+    ensp2uni = Organism.identifiers(organism).index :target => "UniProt/SwissProt Accession", :persist => true, :fields => ["Ensembl Protein ID"], :unnamed => true
+    domain_info = InterPro.protein_domains.tsv :persist => true, :unnamed => true
+    TSV.traverse step(:mi), :type => :array, :into => :stream do |mi|
+      next unless mi =~ /:.*(\d+)(FrameShift|\*)$/
+      pos = $1.to_i
+      protein = mi.partition(":")[0]
+      sequence = ensp2sequence[protein]
+      next unless sequence
+      uni = ensp2uni[protein]
+      ablated_domains = []
+      if uni
+        domains = domain_info[uni]
+        if domains
+          Misc.zip_fields(domains).each do |domain,start,eend|
+            if eend.to_i > pos
+              ablated_domains << domain
+            end
+          end
+        end
+      end
+      next unless pos < (sequence.length.to_f * 0.7) or ablated_domains.any?
+      mi
+    end
   end
 
   dep :mi
@@ -207,7 +235,7 @@ SNVTasks = Proc.new do
       next if scores.nil? or scores.length < 3
       bg_scores = protein_bg_scores[protein]
       next if bg_scores.nil? or bg_scores.length < 3
-      pvalue = R.eval_a "t.test(#{R.ruby2R scores}, #{R.ruby2R bg_scores})$p.value"
+      pvalue = R.eval_a "t.test(#{R.ruby2R scores}, #{R.ruby2R bg_scores}, alternative='greater')$p.value"
       tsv[protein] = [Misc.mean(scores) || scores.first, Misc.mean(bg_scores) || bg_scores.first, pvalue]
     end
     tsv

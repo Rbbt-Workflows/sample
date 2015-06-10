@@ -21,7 +21,6 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
     zygosity.rb
     genes.rb
 
-
     features.rb
 
     mutated_isoforms.rb

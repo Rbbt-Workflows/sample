@@ -2,20 +2,23 @@ module Sample
 
   dep :mi
   dep :mi_damaged
+  dep :mi_truncated
   dep :genomic_mutation_gene_overlaps
   dep :genomic_mutation_splicing_consequence
   dep :genomic_mutation_consequence
   dep :TSS
   task :mutation_info => :tsv do
     Step.wait_for_jobs dependencies
-    ns_mi, damaged_mi, *annotations = dependencies
+    ns_mi, damaged_mi, truncated_mi, *annotations = dependencies
     ns_mi = Set.new ns_mi.load
     damaged_mi = Set.new damaged_mi.load
+    truncated_mi = Set.new truncated_mi.load
 
     annotation_streams = annotations.collect{|dep| TSV.stream_flat2double(dep.path.open).stream }
     pasted_io = TSV.paste_streams(annotation_streams)
 
     ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :unnamed => true, :persist => true
+    enst2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Transcript ID"], :unnamed => true, :persist => true
 
     dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Ensembl Gene ID", "overlapping", "affected", "broken", "splicing", "mutated_isoform", "damaged_mutated_isoform", "TSS promoter (1000 bp)"], :type => :double, :namespace => organism
     dumper.init
@@ -24,15 +27,16 @@ module Sample
       overlapping, splicing, consequence, tss = values 
       gene_info = {}
       overlapping.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :overlapping} if overlapping
-      splicing.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :splicing} if splicing
+      splicing.each{|t| g = enst2ensg[t]; gene_info[g] ||= Set.new; gene_info[g] << :splicing} if splicing
       tss.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :tss} if splicing
       consequence.each do |mi| 
         next unless ns_mi.include? mi
         next unless mi =~ /ENSP/
-        g = ensp2ensg[mi.partition(":").first]
+        protein = mi.partition(":").first
+        g = ensp2ensg[protein]
         gene_info[g] ||= Set.new; 
         gene_info[g] << :mutated_isoform
-        next unless damaged_mi.include? mi
+        next unless damaged_mi.include?(mi) or truncated_mi.include?(mi)
         gene_info[g] << :damaged_mutated_isoform
       end if consequence
 
