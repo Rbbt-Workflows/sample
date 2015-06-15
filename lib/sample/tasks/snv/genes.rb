@@ -23,6 +23,7 @@ module Sample
     dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Ensembl Gene ID", "overlapping", "affected", "broken", "splicing", "mutated_isoform", "damaged_mutated_isoform", "TSS promoter (1000 bp)"], :type => :double, :namespace => organism
     dumper.init
     TSV.traverse pasted_io, :into => dumper, :bar => true do |mut,values|
+      mut = mut.first if Array === mut
       next if values.nil? or values.flatten.compact.empty?
       overlapping, splicing, consequence, tss = values 
       gene_info = {}
@@ -52,7 +53,6 @@ module Sample
         value << (tags.include?(:tss) ? 'true' : 'false')
         values << value
       end
-      mut = mut.first if Array === mut
       [mut, Misc.zip_fields(values)]
     end
   end

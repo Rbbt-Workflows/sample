@@ -7,7 +7,7 @@ module Sample
     stream = TSV.traverse genes, :into => :stream do |mutation, genes|
       genes * "\n"
     end
-    CMD.cmd('sort -u', :in => stream, :pipe => true)
+    CMD.cmd('env LC_ALL=C sort -u', :in => stream, :pipe => true)
   end
 
   dep :affected_genes

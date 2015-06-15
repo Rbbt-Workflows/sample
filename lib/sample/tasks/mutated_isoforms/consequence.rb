@@ -21,7 +21,7 @@ module Sample
       next if mis.empty?
       mis * "\n"
     end
-    CMD.cmd("sort -u", :in => stream, :pipe => true)
+    CMD.cmd("env LC_ALL=C sort -u", :in => stream, :pipe => true)
   end
 
   dep :isoforms
