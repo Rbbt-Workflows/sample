@@ -211,6 +211,7 @@ SNVTasks = Proc.new do
     TSV.traverse step(:DbNSFP), :fields => [damage_field], :type => :single, :bar => self.progress_bar("Traversing protein mutation scores") do |mi, score|
       mi = mi.first if Array === mi
       next unless mi =~ /ENSP/
+      next if score == -999 or score.nil?
       protein = mi.split(":").first
       protein_bg_scores[protein] ||= begin
                                        all_protein_mis = DbNSFP.job(:possible_mutations, clean_name + ' ' + protein, :protein => protein).exec
