@@ -107,7 +107,7 @@ SNVTasks = Proc.new do
     TSV.get_stream step(:annotate)
   end
 
-  Workflow.require_workflow "KinMut_2"
+  Workflow.require_workflow "KinMut2"
   dep :mi
   task :kinmut => :tsv do
     begin
