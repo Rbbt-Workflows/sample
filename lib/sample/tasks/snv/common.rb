@@ -107,10 +107,10 @@ SNVTasks = Proc.new do
     TSV.get_stream step(:annotate)
   end
 
-  Workflow.require_workflow "KinMut2"
   dep :mi
   task :kinmut => :tsv do
     begin
+      Workflow.require_workflow "KinMut2"
       KinMut2.job(:predict_fix, clean_name, :mutations => step(:mi)).run
     rescue Exception
       Log.warn "KinMut error: " << $!.message
