@@ -1,9 +1,12 @@
 Workflow.require_workflow "Sequence"
+Workflow.require_workflow "InterPro"
 Workflow.require_workflow "Structure"
 Workflow.require_workflow "GERP"
 Workflow.require_workflow "DbSNP"
 Workflow.require_workflow "DbNSFP"
 Workflow.require_workflow "EVS"
+
+require 'rbbt/sources/InterPro'
 
 SNVTasks = Proc.new do
 
