@@ -89,7 +89,7 @@ module Sample
   end
 
   def self.organism(sample)
-    metadata(sample)[:organism] || "Hsa/jan2013"
+    metadata(sample)[:organism] || Organism.default_organism("Hsa")
   end
 
 end
