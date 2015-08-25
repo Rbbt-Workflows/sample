@@ -25,9 +25,7 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
 
     mutated_isoforms.rb
 
-
     damage.rb
-
 
     structureppi.rb
    }
