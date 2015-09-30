@@ -45,6 +45,7 @@ module Sample
   end
 
   def self.study_dir(code)
+    return Path.setup(code) if File.exists?(code)
     return study_repo[code] if study_repo[code].exists?
     return project_repo[code] if project_repo[code].exists?
     return project_repo["*"][code].glob.first if project_repo["*"][code].glob.any?

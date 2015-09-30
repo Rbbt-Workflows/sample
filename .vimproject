@@ -30,8 +30,6 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
     structureppi.rb
    }
 
-
-
    genomic_mutations.rb
 
    mutated_isoforms.rb
@@ -50,8 +48,6 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
    }
 
    cnvs.rb
-
-
 
    vcf.rb
 

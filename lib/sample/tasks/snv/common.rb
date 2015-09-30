@@ -208,33 +208,43 @@ SNVTasks = Proc.new do
   dep :DbNSFP
   task :gene_damage_bias => :tsv do 
 
+    Step.wait_for_jobs dependencies
     damage_field = "MetaLR_score"
-    protein_bg_scores = {}
+    protein_bg_scores = TSV.setup({}, :key_field => "Ensembl Protein ID", :fields => ["Score"], :type => :flat)
+
     protein_scores = {}
-    TSV.traverse step(:DbNSFP), :fields => [damage_field], :type => :single, :bar => self.progress_bar("Traversing protein mutation scores") do |mi, score|
+    TSV.traverse step(:DbNSFP), :fields => [damage_field], :type => :single, :bar => self.progress_bar("Computing protein damage scores") do |mi, score|
       mi = mi.first if Array === mi
       next unless mi =~ /ENSP/
       next if score == -999
       protein = mi.split(":").first
-      protein_bg_scores[protein] ||= begin
-                                       all_protein_mis = DbNSFP.job(:possible_mutations, clean_name + ' ' + protein, :protein => protein).exec
-                                       if all_protein_mis
-                                         prediction_job = DbNSFP.job(:annotate, "all_" + protein, :mutations => all_protein_mis)
-                                         prediction_job.produce
-                                         prediction_job.path.tsv(:fields => [damage_field], :type => :single, :cast => :to_f).values.flatten.compact.reject{|v| v == -999 }
-                                       else
-                                         nil
-                                       end
-                                     rescue
-                                       Log.exception $!
-                                       nil
-                                     end
+      next unless Appris::PRINCIPAL_ISOFORMS.include? protein
       protein_scores[protein] ||= []
       protein_scores[protein] << score
       nil
     end
 
-    tsv = TSV.setup({}, :key_field => "Ensembl Protein ID", :fields => ["Score Avg.", "Background Score Avg.", "p.value"], :type => :list, :namespace => organism)
+    bg_proteins = protein_scores.select{|k,v| v.length >= 3}.collect{|k,v| k}
+    TSV.traverse bg_proteins, :fields => [damage_field], :type => :array, :cpus => 10, :bar => self.progress_bar("Computing background protein damage scores"), :into => protein_bg_scores do |protein|
+      scores = begin
+                all_protein_mis = DbNSFP.job(:possible_mutations, clean_name + ' ' + protein, :protein => protein).exec
+                if all_protein_mis
+                  prediction_job = DbNSFP.job(:annotate, "all_" + protein, :mutations => all_protein_mis)
+                  prediction_job.produce
+                  prediction_job.path.tsv(:fields => [damage_field], :type => :single, :cast => :to_f, :unnamed => true).values.flatten.compact.reject{|v| v == -999 }
+                else
+                  nil
+                end
+              rescue
+                Log.exception $!
+                nil
+              end
+      next if scores.nil?
+      [protein, scores]
+    end
+
+
+    tsv = TSV.setup({}, :key_field => "Ensembl Protein ID", :fields => ["Score Avg.", "Background Score Avg.", "p.value"], :type => :list, :namespace => organism, :cast => :to_f)
     protein_scores.each do |protein,scores|
       next if scores.nil? or scores.length < 3
       bg_scores = protein_bg_scores[protein]
@@ -242,6 +252,12 @@ SNVTasks = Proc.new do
       pvalue = R.eval_a "t.test(#{R.ruby2R scores}, #{R.ruby2R bg_scores}, alternative='greater')$p.value"
       tsv[protein] = [Misc.mean(scores) || scores.first, Misc.mean(bg_scores) || bg_scores.first, pvalue]
     end
-    tsv
+
+    fields = tsv.fields
+    ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :persist => true, :fields => ["Ensembl Protein ID"]
+    tsv.add_field "Ensembl Gene ID" do |protein, scores|
+      ensp2ensg[protein]
+    end
+    tsv.reorder "Ensembl Gene ID", fields
   end
 end
