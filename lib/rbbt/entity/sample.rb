@@ -46,8 +46,8 @@ module Sample
   end
 
   property :has_gene_expression? => :single do
-    Sample.matrices(cohort).include?("gene_expression") and
-    TSV.parse_header(Sample.matrix_file(cohort, :gene_expression)).fields.include?(self)
+    Study.matrices(cohort).include?("gene_expression") and
+    TSV.parse_header(Study.matrix_file(cohort, :gene_expression)).fields.include?(self)
   end
 
 
