@@ -14,8 +14,8 @@ module Sample
     damaged_mi = Set.new damaged_mi.load
     truncated_mi = Set.new truncated_mi.load
 
-    annotation_streams = annotations.collect{|dep| TSV.stream_flat2double(dep.path.open).stream }
-    pasted_io = TSV.paste_streams(annotation_streams)
+    #annotation_streams = annotations.collect{|dep| TSV.stream_flat2double(dep.path.open).stream }
+    pasted_io = TSV.paste_streams(annotations, :fix_flat => true)
 
     ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :unnamed => true, :persist => true
     enst2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Transcript ID"], :unnamed => true, :persist => true

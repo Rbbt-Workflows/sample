@@ -46,18 +46,21 @@ SNVTasks = Proc.new do
     TSV.paste_streams dependencies, :sort => true
   end
 
+  dep :organism
   dep :genomic_mutations
   dep Sequence, :genes, :positions => :genomic_mutations, :organism => :organism
   task :genomic_mutation_gene_overlaps => :tsv do
     TSV.get_stream step(:genes)
   end
 
+  dep :organism
   dep :genomic_mutations
   dep Sequence, :splicing_mutations, :mutations => :genomic_mutations, :organism => :organism
   task :genomic_mutation_splicing_consequence => :tsv do
     TSV.get_stream step(:splicing_mutations)
   end
 
+  dep :organism
   dep :genomic_mutations
   dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :organism => :organism
   task :genomic_mutation_consequence => :tsv do
