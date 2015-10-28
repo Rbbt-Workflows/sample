@@ -17,8 +17,9 @@ module Sample
              end
     sorted = CMD.cmd('grep ":" | sort -u | sed "s/^M:/MT:/" | env LC_ALL=C sort -k1,1 -k2,2n -t:', :in => stream, :pipe => true, :no_fail => true)
     mappable_regions = Sample.mappable_regions(sample)
+    Path.setup(mappable_regions)
     if mappable_regions
-      mappable_regions_io = Open.open(mappable_regions)
+      mappable_regions_io = Open.open(mappable_regions.find)
       mappable = Misc.select_ranges(sorted, mappable_regions_io, ":")
       Misc.sensiblewrite(path, CMD.cmd('cut -f1', :in => mappable, :pipe => true, :no_fail => true))
     else
