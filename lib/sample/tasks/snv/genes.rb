@@ -29,7 +29,7 @@ module Sample
       gene_info = {}
       overlapping.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :overlapping} if overlapping
       splicing.each{|t| g = enst2ensg[t]; gene_info[g] ||= Set.new; gene_info[g] << :splicing} if splicing
-      tss.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :tss} if splicing
+      tss.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :tss} if tss
       consequence.each do |mi| 
         next unless ns_mi.include? mi
         next unless mi =~ /ENSP/
