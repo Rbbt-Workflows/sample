@@ -5,5 +5,5 @@
     - sample.genomic_mutation_annotations
 
   = table :table_id => "Mutation annotations for mutated (principal) isoforms for #{sample}" do
-    - sample.mutation_mi_annotations(:principal => true)
+    - sample.mi_annotations(:principal => true)
 
