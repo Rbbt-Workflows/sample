@@ -149,20 +149,19 @@ SNVTasks = Proc.new do
 
   dep :interfaces
   task :broken_ppi => :tsv do
-
-   ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :persist => true
-   dumper = TSV::Dumper.new :key_field => "Mutated Isoform", :fields => ["Ensembl Protein ID", "Partner Ensembl Protein ID"], :type => :list, :namespace => organism
-   dumper.init
-   TSV.traverse step(:interfaces), :into => dumper do |mi, values|
-     mi = mi.first if Array === mi
-     partners = values.first
-     source = mi.partition(":").first
-     ps = partners.collect do |partner|
-       [mi,ensp2ensg.values_at(source, partner)]
-     end
-     ps.extend MultipleResult
-     ps
-   end
+    ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :persist => true
+    dumper = TSV::Dumper.new :key_field => "Mutated Isoform", :fields => ["Ensembl Protein ID", "Partner Ensembl Protein ID"], :type => :list, :namespace => organism
+    dumper.init
+    TSV.traverse step(:interfaces), :into => dumper do |mi, values|
+      mi = mi.first if Array === mi
+      partners = values.first
+      source = mi.partition(":").first
+      ps = partners.collect do |partner|
+        [mi,ensp2ensg.values_at(source, partner)]
+      end
+      ps.extend MultipleResult
+      ps
+    end
   end
 
   dep :mi
