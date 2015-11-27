@@ -280,4 +280,11 @@ SNVTasks = Proc.new do
     end
     tsv.reorder "Ensembl Gene ID", fields
   end
+
+  dep :genomic_mutations
+  dep :organism
+  dep Sequence, :sequence_ontology, :mutations => :genomic_mutations, :organism => :organism
+  task :sequence_ontology => :tsv do
+    TSV.get_stream step(:sequence_ontology)
+  end
 end
