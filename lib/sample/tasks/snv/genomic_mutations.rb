@@ -28,7 +28,6 @@ module Sample
     nil
   end
 
-  Workflow.require_workflow "MutationSignatures"
   dep :genomic_mutations
   dep :organism
   dep :watson
