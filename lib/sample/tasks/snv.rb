@@ -8,6 +8,7 @@ Sample.instance_eval &SNVTasks
 
 require 'sample/tasks/snv/zygosity'
 require 'sample/tasks/snv/genes'
+require 'sample/tasks/snv/drugs'
 
 #require 'sample/tasks/snv/mutated_isoforms'
 #require 'sample/tasks/snv/damage'

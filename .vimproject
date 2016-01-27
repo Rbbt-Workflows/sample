@@ -28,6 +28,8 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
     damage.rb
 
     structureppi.rb
+
+    drugs.rb
    }
 
    genomic_mutations.rb
