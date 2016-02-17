@@ -35,10 +35,10 @@ module Sample
   end
 
   property :has_vcf? => :single do
-    Sample.vcf_files(self).any?
+    Sample.vcf_files(sample_code).any?
   end
   property :has_cnv? => :single do
-    Sample.has_cnv?(self)
+    Sample.has_cnv?(sample_code)
   end
 
   property :has_genotype? => :single do

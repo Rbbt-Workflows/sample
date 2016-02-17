@@ -4,9 +4,7 @@ module Sample
     if sample =~ /(.*):(.*)/
       code, sample = $1, $2
       study_dir = study_dir(code)
-      return study_dir[sample] if study_dir[sample].exists?
       return study_dir.CNV[sample] if study_dir.CNV[sample].exists?
-      return study_dir
     else
       return sample_repo[sample] 
     end
@@ -16,6 +14,7 @@ module Sample
 
   def self.cnv_vcf_files(sample)
     sample_dir = sample_cnv_dir(sample)
+    return [] if sample_dir.nil?
     code, sample = $1, $2 if sample =~ /(.*):(.*)/
     return sample_dir.CNV.glob('*.vcf*').uniq if sample_dir.CNV.glob('*.vcf*').any?
     return sample_dir.CNV.vcf[sample + '.vcf*'].glob.uniq if sample_dir.CNV.vcf[sample + '.vcf*'].glob.any?
@@ -23,11 +22,11 @@ module Sample
   end
 
   def self.has_cnv?(sample)
-    cnv_vcf_files(sample).any?
+    !! sample_cnv_dir(sample)
   end
 
   def self.cnvs(sample)
-    sample_dir = sample_dir(sample)
+    sample_dir = sample_cnv_dir(sample)
     raise "No sample data for: #{ sample }" if sample_dir.nil? 
 
     return sample_dir if sample_dir.exists? and not sample_dir.directory?

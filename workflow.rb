@@ -39,6 +39,7 @@ Workflow.require_workflow "MutationSignatures"
 require 'sample/tasks/mutation_signatures'
 
 require 'sample/tasks/snv'
+require 'sample/tasks/cnv'
 
 
 require 'rbbt/entity/sample'

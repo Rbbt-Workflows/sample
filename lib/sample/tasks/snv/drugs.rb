@@ -13,6 +13,26 @@ begin
 
     dep :actionable_items
     input :disease_terms, :array, "Disease terms" 
+    task :recommended_therapies => :array do |disease_terms|
+      sensitive = []
+      resistant = []
+      step(:actionable_items).load.select("status" => /approved/i).select do |k,v|
+        resistance = v["resistance"] == 'resistance'
+        drug = v["standard_drug_name"]
+        if resistance
+          resistant << drug
+        else
+          str = v["cancer"] + " " + v["extra"] + " " + v["extra2"]
+          tokens = str.split(/[,\t| ]/).collect{|t| t.strip.downcase }.reject{|t| t.empty?}.compact.uniq
+          sensitive << drug if (tokens & disease_terms).any?
+        end
+      end
+
+      sensitive - resistant
+    end
+
+    dep :actionable_items
+    input :disease_terms, :array, "Disease terms" 
     task :approved_therapies => :array do |disease_terms|
       sensitive = []
       resistant = []
@@ -30,6 +50,7 @@ begin
 
       sensitive - resistant
     end
+
 
   end
 
