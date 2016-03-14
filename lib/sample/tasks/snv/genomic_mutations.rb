@@ -8,7 +8,9 @@ module Sample
     stream = if file
                if vcf
                  job = Sequence.job(:genomic_mutations, sample, :vcf_file => file)
-                 TSV.get_stream job.run(true)
+                 #TSV.get_stream job.run(true)
+                 job.produce
+                 TSV.get_stream job
                else
                  TSV.get_stream file
                end

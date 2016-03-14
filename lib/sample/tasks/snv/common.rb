@@ -48,21 +48,21 @@ SNVTasks = Proc.new do
 
   dep :organism
   dep :genomic_mutations
-  dep Sequence, :genes, :positions => :genomic_mutations, :organism => :organism
+  dep Sequence, :genes, :positions => :genomic_mutations, :organism => :organism, :vcf => false
   task :genomic_mutation_gene_overlaps => :tsv do
     TSV.get_stream step(:genes)
   end
 
   dep :organism
   dep :genomic_mutations
-  dep Sequence, :splicing_mutations, :mutations => :genomic_mutations, :organism => :organism
+  dep Sequence, :splicing_mutations, :mutations => :genomic_mutations, :organism => :organism, :vcf => false
   task :genomic_mutation_splicing_consequence => :tsv do
     TSV.get_stream step(:splicing_mutations)
   end
 
   dep :organism
   dep :genomic_mutations
-  dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :organism => :organism
+  dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :organism => :organism, :vcf => false
   task :genomic_mutation_consequence => :tsv do
     TSV.get_stream step(:mutated_isoforms_fast)
   end
@@ -220,7 +220,7 @@ SNVTasks = Proc.new do
 
   dep :genomic_mutations
   dep :organism
-  dep Sequence, :TSS, :positions => :genomic_mutations, :organism => :organism
+  dep Sequence, :TSS, :positions => :genomic_mutations, :organism => :organism, :vcf => false
   task :TSS => :tsv do
     TSV.get_stream step(:TSS)
   end
@@ -283,7 +283,7 @@ SNVTasks = Proc.new do
 
   dep :genomic_mutations
   dep :organism
-  dep Sequence, :sequence_ontology, :mutations => :genomic_mutations, :organism => :organism
+  dep Sequence, :sequence_ontology, :mutations => :genomic_mutations, :organism => :organism, :vcf => false
   task :sequence_ontology => :tsv do
     TSV.get_stream step(:sequence_ontology)
   end
