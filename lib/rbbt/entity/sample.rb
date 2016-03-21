@@ -15,7 +15,7 @@ module Sample
     end
   end
   
-  def self.update_tasks_property_bindings
+  def self.update_task_properties
     Sample.tasks.each do |name, b|
       property name.to_sym => :single do |run=true, options={}|
         run, options = true, run if Hash === run
