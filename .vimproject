@@ -32,6 +32,9 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
     drugs.rb
    }
 
+   cnv.rb
+
+
    #NOT USED!!!
    #  |
    #  v

@@ -62,7 +62,7 @@ module Sample
     parser = TSV::Parser.new step(:mutation_info)
     key_field, *fields = parser.fields
 
-    dumper = TSV::Dumper.new :key_field => key_field, :fields => fields, :type => :double
+    dumper = TSV::Dumper.new :key_field => key_field, :fields => fields, :type => :double, :namespace => organism
     dumper.init
     io = TSV.traverse parser, :into => dumper do |mutation, info|
       res = []
@@ -73,7 +73,7 @@ module Sample
       res
     end
 
-    dumper2 = TSV::Dumper.new :key_field => key_field, :fields => fields, :type => :list
+    dumper2 = TSV::Dumper.new :key_field => key_field, :fields => fields, :type => :list, :namespace => organism
     dumper2.init
     TSV.traverse TSV.collapse_stream(io), :into => dumper2 do |gene,values|
       gene = gene.first if Array === gene

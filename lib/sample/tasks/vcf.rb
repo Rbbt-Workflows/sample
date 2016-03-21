@@ -92,6 +92,4 @@ module Sample
     end
     files * "\n"
   end
-
-  export_asynchronous :final_vcf
 end

@@ -10,8 +10,8 @@ module Sample
     enspt2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Transcript ID", "Ensembl Protein ID"], :unnamed => true, :persist => true
     TSV.traverse TSV.paste_streams(dependencies) do |mut,values|
       values.flatten.each do |v|
-        e,c = v.split(":").first
-        next if e =~ /ENSP/ and not ns_mutated_isoforms.include? v
+        e,c = v.split(":")
+        next if c =~ /UTR\d/ or (e =~ /ENSP/ and not ns_mutated_isoforms.include? v)
         g = enspt2ensg[e]
         raise "Not understood: " + v if g.nil?
         genes[g] ||= []
@@ -24,15 +24,18 @@ module Sample
   dep :homozygous
   dep :genomic_mutation_splicing_consequence
   dep :genomic_mutation_consequence
+  dep :mi
   task :homozygous_genes => :array do
     Step.wait_for_jobs dependencies
     genes = Set.new 
     homozygous = Set.new step(:homozygous).load
+    ns_mutated_isoforms = Set.new step(:mi).load
     enspt2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Transcript ID", "Ensembl Protein ID"], :unnamed => true, :persist => true
     TSV.traverse TSV.paste_streams(dependencies) do |mut,values|
       next unless homozygous.include? mut
       values.flatten.each do |v|
-        e = v.split(":").first
+        e,c = v.split(":")
+        next if c =~ /UTR\d/ or (e =~ /ENSP/ and not ns_mutated_isoforms.include? v)
         g = enspt2ensg[e]
         raise "Not understood: " + v if g.nil?
         genes << g

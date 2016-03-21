@@ -40,6 +40,8 @@ module Sample
         gt_field = s + ':GT'
         gt_field = fields.select{|f| f =~ /tumou?r:GT$/i}.first if not fields.include? gt_field
         gt_field = fields.select{|f| f =~ /_t:GT$/i}.first if not fields.include? gt_field
+        gt_field = fields.select{|f| f =~ /:GT$/i}.reject{|f| f =~ /[-_]b:GT/i}.first if not fields.include? gt_field
+        gt_field = fields.select{|f| f =~ /:GT$/i}.first if not fields.include? gt_field
         gt_field = [gt_field] if String === gt_field
 
         TSV.traverse file, :fields => gt_field, :type => :single, :bar => "Homozygous #{basename}" do |mutation,gt|
