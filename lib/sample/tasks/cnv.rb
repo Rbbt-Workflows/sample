@@ -76,4 +76,4 @@ module Sample
   end
 
 end
-Sample.update_tasks_property_bindings
+Sample.update_task_properties
