@@ -113,13 +113,30 @@ SNVTasks = Proc.new do
     TSV.get_stream step(:annotate)
   end
 
-  dep :mi
+  dep :mi, :principal => true
   task :kinmut => :tsv do
     begin
       Workflow.require_workflow "KinMut2"
-      KinMut2.job(:predict_fix, clean_name, :mutations => step(:mi)).run
+      job = KinMut2.job(:predict_fix, clean_name, :mutations => step(:mi))
+      job.produce
+
+      parser = TSV::Parser.new(job.path)
+      options = parser.options
+      options[:fields] = options[:fields] + ["Ensembl Protein ID"]
+      dumper = TSV::Dumper.new options
+      dumper.init 
+      TSV.traverse job, :into => dumper do |mi,values|
+        mi = mi.first if Array === mi
+        values.push mi.partition(":").first
+        [mi, values]
+      end
+
+      translations = job.step(:predict).file('translations').tsv :type => :list
+      translations.key_field = "Ensembl Protein ID"
+      TSV.open(dumper).attach(translations).reorder :key, parser.fields + translations.fields
     rescue Exception
       Log.warn "KinMut error: " << $!.message
+      Log.exception $!
       ""
     end
   end
