@@ -104,6 +104,15 @@ module Sample
     end
   end
 
+  dep :gene_sample_mutation_status
+  returns "Ensembl Gene ID"
+  task :affected_genes => :array do
+    TSV.traverse step(:gene_sample_mutation_status), :fields => ["affected"], :type => :single, :into => :stream do |gene, affected|
+      next unless affected == "true"
+      gene
+    end
+  end
+
   #dep :genomic_mutation_splicing_consequence
   #task :miss_spliced_genes => :array do
   #  Step.wait_for_jobs dependencies
