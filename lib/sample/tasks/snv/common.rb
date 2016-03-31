@@ -162,6 +162,7 @@ SNVTasks = Proc.new do
       mi = mi.first if Array === mi
       [mi, [values[1].uniq]]
     end
+    CMD.cmd('sort -u', :in => dumper.stream, :pipe => true)
   end
 
   dep :interfaces
