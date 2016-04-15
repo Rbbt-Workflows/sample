@@ -38,6 +38,12 @@ SNVTasks = Proc.new do
     TSV.get_stream step(:annotate)
   end
 
+  dep :genomic_mutations
+  task :num_genomic_mutations => :integer do
+    io = TSV.get_stream step(:genomic_mutations)
+    CMD.cmd('wc -l', :in => io).read
+  end
+
   dep :annotate_DbSNP
   dep :annotate_Genomes1000
   dep :annotate_GERP

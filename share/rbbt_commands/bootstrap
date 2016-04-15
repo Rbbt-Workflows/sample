@@ -1,13 +1,284 @@
 #!/usr/bin/env ruby
 
-samples = Sample.all_samples
+require 'rbbt-util'
+require 'rbbt/util/simpleopt'
+require 'rbbt/workflow'
 
-Misc.bootstrap samples do |sample|
-  Sample.setup(sample)
-  sample.mutation_genes
-  sample.genomic_mutation_annotations
-  sample.mutation_mi_annotations
-  sample.mutation_details
-  sample.affected_alleles
-  sample.broken_alleles
+$0 = "rbbt #{$previous_commands*""} #{ File.basename(__FILE__) }" if $previous_commands
+
+options = SOPT.setup <<EOF
+
+Bootstrap samples from a directory
+
+$ rbbt workflow cmd Sample [<directory>] [<study>,<study>,...]
+
+If no directory is used, the default is used #{Sample.study_repo}
+
+--task* Bootstrap only one task
+--cpus* CPUs to use concurrently
+-h--help Print this help
+-W--workflows* Load workflows (comma separated)
+-wd--workdir* Workdir for Workflow jobs
+EOF
+
+Workflow.workdir = options[:workdir] if options[:workdir]
+
+Workflow.require_workflow "Sample"
+Workflow.require_workflow "Study"
+
+if options[:workflows]
+  options[:workflows].split(",").each do |workflow|
+    Workflow.require_workflow workflow.strip
+  end
+end
+
+rbbt_usage and exit 0 if options[:help]
+
+Sample.study_repo = Path.setup(ARGV.shift.dup) if ARGV.any? 
+
+if ARGV.any?
+  studies = Study.setup(ARGV.shift.split(","))
+else
+  studies = Sample.all_studies
+end
+
+task = options[:task]
+studies = studies.select{|s| Study.setup(s.dup).has_genotypes? }
+
+$cpus ||= options[:cpus] || 3
+$cpus = $cpus.to_i if String === $cpus
+if task
+  Misc.bootstrap studies, [$cpus, studies.length].min, :respawn => :always do |study|
+    Study.setup(study)
+    Misc.bootstrap study.samples, [$cpus, study.samples.length].min, :respawn => :always do |sample|
+
+      job = sample.send(task.to_sym, :job)
+      job.produce
+    end
+  end
+  exit
+end
+
+enrichment_databases = Enrichment::DATABASES - ['interpro', 'pfam', 'pina', 'tfacts', 'biocarta', 'matador', 'kegg', 'gene_ages', 'go', 'go_bp', 'go_mf', 'go_cc', 'reactome', 'biogrid']
+
+i = 0
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, [$cpus, studies.length].min, :respawn => :always do |study|
+  Study.setup(study)
+
+  job = study.sample_genes(:job)
+  job.produce
+
+  job = study.mutation_info(:job)
+  job.produce
+
+  Log.warn "STUDY BOOTSTRAP - " + study
+  nil
+end
+
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, [$cpus, studies.length].min, :respawn => :always do |study|
+  Study.setup(study)
+  Misc.bootstrap study.knowledge_base.registry.keys, 1, :respawn => :always do |database|
+    study.knowledge_base.get_index(database).reverse
+  end
+  Log.warn "STUDY BOOTSTRAP - " + study
+  nil
+end
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, [$cpus, studies.length].min, :respawn => :always do |study|
+  Study.setup(study)
+  job = study.firestar(:job)
+  job.produce
+
+  next if study.include? "PANCANCER"
+  job = study.kinmut(:job)
+  job.produce
+
+  Log.warn "STUDY BOOTSTRAP - " + study
+  nil
+end
+
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, 2, :respawn => :always do |study|
+
+  Misc.bootstrap enrichment_databases, 2, :respawn => :always do |database|
+    Study.setup(study)
+    next if database == 'interpro'
+    job = study.recurrent_gene_enrichment(:job, :database => database)
+    job.produce
+    
+    nil
+  end
+  Log.warn "STUDY BOOTSTRAP - " + study
+  nil
+end
+
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, 3, :respawn => :always do |study|
+  Study.setup(study)
+  job = study.firestar_neighbours(:job)
+  job.produce
+
+  Log.warn "STUDY BOOTSTRAP - " + study
+  nil
+end
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, 3, :respawn => :always do |study|
+  Study.setup(study)
+  job = study.mi_annotations(:job)
+  job.produce
+
+  Log.warn "STUDY BOOTSTRAP - " + study
+  nil
+end
+
+
+#{{{ DRIVERS
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, 2, :respawn => :always do |study|
+  Study.setup(study)
+
+  job = study.binomial_significance(:job)
+  job.produce
+  nil
+end
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, [$cpus, studies.length].min, :respawn => :always do |study|
+  Study.setup(study)
+
+  job = study.gene_damage_bias(:job)
+  job.produce
+  nil
+end
+
+
+#{{{ DRIVER PATHWAYS
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, 2, :respawn => :always do |study|
+  Study.setup(study)
+
+  Misc.bootstrap enrichment_databases, 2, :respawn => :always do |database|
+    job = study.significant_gene_enrichment(:job, :database => database)
+    job.produce
+    nil
+  end
+  Log.warn "STUDY BOOTSTRAP - " + study
+  nil
+end
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, [$cpus, studies.length].min, :respawn => :always do |study|
+  Study.setup(study)
+
+  Misc.bootstrap enrichment_databases, 2, :respawn => :always do |database|
+    job = study.damage_biased_gene_enrichment(:job, :database => database)
+    job.produce
+    nil
+  end
+  nil
+end
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, 2, :respawn => :always do |study|
+  Study.setup(study)
+  Misc.bootstrap enrichment_databases, 2, :respawn => :always do |database|
+    job = study.significance_rank_enrichment(:job, :database => database)
+    job.produce
+    nil
+  end
+  Log.warn "STUDY BOOTSTRAP - " + study
+  nil
+end
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, [$cpus, studies.length].min, :respawn => :always do |study|
+  Study.setup(study)
+
+  Misc.bootstrap enrichment_databases, 2, :respawn => :always do |database|
+    job = study.damage_bias_rank_enrichment(:job, :database => database)
+    job.produce
+    nil
+  end
+  nil
+end
+
+#{{{ GENOMIC MUTATION ANNOTATIONS
+
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, 1, :respawn => :always do |study|
+  Study.setup(study)
+
+  job = study.genomic_mutation_annotations(:job)
+  job.produce
+
+  Log.warn "STUDY BOOTSTRAP - " + study
+  nil
+end
+
+#{{{ SAMPLE ENRICHMENT
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, 2, :respawn => :always do |study|
+
+  Misc.bootstrap enrichment_databases, 2, :respawn => :always do |database|
+    Study.setup(study)
+    job = study.sample_enrichment(:job, :database => database)
+    job.produce
+    #study.mutation_enrichment(true, :database => database)
+    nil
+  end
+  Log.warn "STUDY BOOTSTRAP - " + study
+  nil
+end
+
+#{{{ MUTSIG
+
+Workflow.require_workflow "MutSig"
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, 1, :respawn => :always do |study|
+  Study.setup(study)
+  next if study.include? "PANCANCER"
+  job = study.mut_sig(:job)
+  job.produce
+end
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, $cpus, :respawn => :always do |study|
+  Study.setup(study)
+  next if study.include? "PANCANCER"
+
+  Misc.bootstrap enrichment_databases, 2, :respawn => :always do |database|
+    job = study.mut_sig_significant_enrichment(:job, :database => database)
+    job.produce
+    nil
+  end
+
+  Log.warn "STUDY BOOTSTRAP - " + study
+  nil
+end
+
+Log.warn "STUDY BOOTSTRAP - #{i+=1; i}"
+Misc.bootstrap studies, 1, :respawn => :always do |study|
+  Study.setup(study)
+  next if study.include? "PANCANCER"
+
+  Misc.bootstrap enrichment_databases, 1, :respawn => :always do |database|
+    job = study.mut_sig_rank_enrichment(:job, :database => database)
+    job.produce
+    nil
+  end
+
+  Log.warn "STUDY BOOTSTRAP - " + study
+  nil
 end

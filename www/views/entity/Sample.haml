@@ -12,7 +12,9 @@
   - if sample.genomic_mutations
     %dl
       %dt Genomic Mutations
-      %dd= GenomicMutation.setup(sample.genomic_mutations, sample, sample.organism, sample.watson).list_link :length, "Genomic mutations in #{ sample }"
+      %dd
+        = fragment do
+          = GenomicMutation.setup(sample.genomic_mutations, sample, sample.organism, sample.watson).list_link :length, "Genomic mutations in #{ sample }"
 
       %dt Mutated (principal) Isoforms
       - isoforms = sample.mi(:principal => true)
