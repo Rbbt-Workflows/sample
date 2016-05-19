@@ -50,4 +50,3 @@ require 'rbbt/entity/sample'
 #require 'sample/tasks/genes'
 #require 'sample/tasks/vcf'
 #require 'sample/tasks/cnvs'
-

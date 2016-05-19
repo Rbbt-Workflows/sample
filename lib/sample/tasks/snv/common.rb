@@ -31,6 +31,7 @@ SNVTasks = Proc.new do
     TSV.get_stream step(:annotate)
   end
 
+
   dep :genomic_mutations
   dep :organism 
   dep EVS, :annotate, :mutations => :genomic_mutations, :organism => :organism
@@ -75,7 +76,7 @@ SNVTasks = Proc.new do
 
   dep :genomic_mutation_consequence
   task :mi => :array do
-    io = TSV.traverse step(:genomic_mutation_consequence), :into => :stream do |mut, mis|
+    io = TSV.traverse step(:genomic_mutation_consequence), :into => :stream, :bar => "Processing MIs" do |mut, mis|
       mis = mis.reject{|mi| mi =~ /ENST|:([*A-Z])\d+\1$/}
       next if mis.empty?
       mis.extend MultipleResult
@@ -311,4 +312,5 @@ SNVTasks = Proc.new do
   task :sequence_ontology => :tsv do
     TSV.get_stream step(:sequence_ontology)
   end
+
 end

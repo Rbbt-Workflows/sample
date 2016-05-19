@@ -1,4 +1,5 @@
 require 'rbbt-util'
+require 'rbbt/util/simpleopt'
 require 'sample/mutations'
 require 'sample/cnv'
 
