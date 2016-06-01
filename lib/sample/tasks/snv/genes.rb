@@ -1,16 +1,18 @@
 module Sample
 
-  dep :mi
   dep :mi_damaged
   dep :mi_truncated
+  dep :genomic_mutation_consequence, :non_synonymous => true
   dep :genomic_mutation_gene_overlaps
   dep :genomic_mutation_splicing_consequence
-  dep :genomic_mutation_consequence
   dep :TSS
   task :mutation_info => :tsv do
-    Step.wait_for_jobs dependencies
-    ns_mi, damaged_mi, truncated_mi, *annotations = dependencies
-    ns_mi = Set.new ns_mi.load
+    #ns_mi, damaged_mi, truncated_mi, *annotations = dependencies
+    damaged_mi, truncated_mi, *annotations = dependencies
+
+    Step.wait_for_jobs([damaged_mi, truncated_mi, annotations.first])
+
+    #ns_mi = Set.new ns_mi.load
     damaged_mi = Set.new damaged_mi.load
     truncated_mi = Set.new truncated_mi.load
 
@@ -25,13 +27,12 @@ module Sample
     TSV.traverse pasted_io, :into => dumper, :bar => true do |mut,values|
       mut = mut.first if Array === mut
       next if values.nil? or values.flatten.compact.empty?
-      overlapping, splicing, consequence, tss = values 
+      consequence, overlapping, splicing, tss = values 
       gene_info = {}
       overlapping.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :overlapping} if overlapping
       splicing.each{|t| g = enst2ensg[t]; gene_info[g] ||= Set.new; gene_info[g] << :splicing} if splicing
       tss.each{|g| gene_info[g] ||= Set.new; gene_info[g] << :tss} if tss
       consequence.each do |mi| 
-        next unless ns_mi.include? mi
         next unless mi =~ /ENSP/
         protein = mi.partition(":").first
         g = ensp2ensg[protein]
@@ -82,14 +83,18 @@ module Sample
     end
   end
 
-  dep :gene_mutation_status
-  dep :compound_mutation_genes
-  dep :homozygous_genes
-  dep :missing_genes
+  dep :gene_mutation_status, :compute => :nodup
+  dep :missing_genes, :compute => :nodup
+  dep :compound_mutation_genes, :compute => :nodup
+  dep :homozygous_genes, :compute => :nodup
   task :gene_sample_mutation_status => :tsv do
-    Step.wait_for_jobs dependencies
+    gene_mutation_status = step(:gene_mutation_status)
 
-    sets = dependencies[1..-1].collect{|dep| Set.new dep.load }
+    sets = [:missing_genes, :compound_mutation_genes, :homozygous_genes].collect do |key|
+      step(key).load
+    end
+
+    #sets = dependencies[1..-1].collect{|dep| Set.new dep.load }
 
     parser = TSV::Parser.new step(:gene_mutation_status)
     fields = parser.fields + dependencies[1..-1].collect{|dep| dep.task.name.to_s.sub(/_genes/,'') }

@@ -14,12 +14,18 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
    snv.rb
    snv=snv{
     vcf.rb
+
     genomic_mutations.rb
 
     common.rb
 
     zygosity.rb
+
     genes.rb
+
+    # NOT USED!!!
+    #  |
+    #  v
 
     features.rb
 
@@ -35,7 +41,7 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
    cnv.rb
 
 
-   #NOT USED!!!
+   # NOT USED!!!
    #  |
    #  v
    genomic_mutations.rb

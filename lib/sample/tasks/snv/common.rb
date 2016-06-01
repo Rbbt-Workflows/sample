@@ -6,6 +6,7 @@ Workflow.require_workflow "DbSNP"
 Workflow.require_workflow "DbNSFP"
 Workflow.require_workflow "EVS"
 
+
 require 'rbbt/sources/InterPro'
 
 SNVTasks = Proc.new do
@@ -76,13 +77,12 @@ SNVTasks = Proc.new do
 
   dep :genomic_mutation_consequence
   task :mi => :array do
-    io = TSV.traverse step(:genomic_mutation_consequence), :into => :stream, :bar => "Processing MIs" do |mut, mis|
+    TSV.traverse step(:genomic_mutation_consequence), :into => :stream, :bar => "Processing MIs" do |mut, mis|
       mis = mis.reject{|mi| mi =~ /ENST|:([*A-Z])\d+\1$/}
       next if mis.empty?
       mis.extend MultipleResult
       mis
     end
-    CMD.cmd('shuf', :in => io, :pipe => true)
   end
 
   dep :mi
@@ -90,7 +90,7 @@ SNVTasks = Proc.new do
     ensp2sequence = Organism.protein_sequence(organism).tsv :persist => true, :unnamed => true
     ensp2uni = Organism.identifiers(organism).index :target => "UniProt/SwissProt Accession", :persist => true, :fields => ["Ensembl Protein ID"], :unnamed => true
     domain_info = InterPro.protein_domains.tsv :persist => true, :unnamed => true
-    TSV.traverse step(:mi), :type => :array, :into => :stream do |mi|
+    TSV.traverse step(:mi), :type => :array, :into => :stream, :bar => "MI truncated #{clean_name}" do |mi|
       next unless mi =~ /:.*(\d+)(FrameShift|\*)$/
       pos = $1.to_i
       protein = mi.partition(":")[0]
@@ -118,6 +118,16 @@ SNVTasks = Proc.new do
   dep DbNSFP, :annotate, :mutations => :mi, :organism => :organism
   task :DbNSFP => :tsv do
     TSV.get_stream step(:annotate)
+  end
+
+  dep :DbNSFP
+  input :field, :string, "Damage score field from DbNSFP", "MetaSVM_score"
+  task :mi_damaged => :array do |field|
+    TSV.traverse step(:DbNSFP), :fields => [field], :type => :single, :cast => :to_f, :into => :stream, :bar => "MI damaged #{clean_name}" do |mi, score|
+      next nil unless score > 0
+      mi.extend MultipleResult if Array === mi
+      mi
+    end
   end
 
   dep :mi, :principal => true
@@ -148,15 +158,6 @@ SNVTasks = Proc.new do
     end
   end
 
-  dep :DbNSFP
-  input :field, :string, "Damage score field from DbNSFP", "MetaSVM_score"
-  task :mi_damaged => :array do |field|
-    TSV.traverse step(:DbNSFP), :fields => [field], :type => :single, :cast => :to_f, :into => :stream do |mi, score|
-      next nil unless score > 0
-      mi.extend MultipleResult if Array === mi
-      mi
-    end
-  end
 
   dep :mi
   dep :organism
@@ -253,7 +254,6 @@ SNVTasks = Proc.new do
   dep :DbNSFP
   task :gene_damage_bias => :tsv do 
 
-    Step.wait_for_jobs dependencies
     damage_field = "MetaLR_score"
     protein_bg_scores = TSV.setup({}, :key_field => "Ensembl Protein ID", :fields => ["Score"], :type => :flat)
 
