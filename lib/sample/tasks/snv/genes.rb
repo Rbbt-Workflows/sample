@@ -10,7 +10,8 @@ module Sample
     #ns_mi, damaged_mi, truncated_mi, *annotations = dependencies
     damaged_mi, truncated_mi, *annotations = dependencies
 
-    Step.wait_for_jobs([damaged_mi, truncated_mi, annotations.first])
+    Step.wait_for_jobs(dependencies)
+    #Step.wait_for_jobs([damaged_mi, truncated_mi, annotations.first])
 
     #ns_mi = Set.new ns_mi.load
     damaged_mi = Set.new damaged_mi.load
