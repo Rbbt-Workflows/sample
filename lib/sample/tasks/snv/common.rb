@@ -69,8 +69,9 @@ SNVTasks = Proc.new do
   end
 
   dep :organism
+  dep :watson
   dep :genomic_mutations
-  dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :organism => :organism, :vcf => false
+  dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :organism => :organism, :vcf => false, :watson => :watson
   task :genomic_mutation_consequence => :tsv do
     TSV.get_stream step(:mutated_isoforms_fast)
   end
@@ -307,8 +308,8 @@ SNVTasks = Proc.new do
     tsv.reorder "Ensembl Gene ID", fields
   end
 
-  dep :genomic_mutations
   dep :organism
+  dep :genomic_mutations
   dep Sequence, :sequence_ontology, :mutations => :genomic_mutations, :organism => :organism, :vcf => false
   task :sequence_ontology => :tsv do
     TSV.get_stream step(:sequence_ontology)

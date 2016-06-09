@@ -5,19 +5,15 @@ module Sample
   dep :genomic_mutation_consequence, :non_synonymous => true
   dep :genomic_mutation_gene_overlaps
   dep :genomic_mutation_splicing_consequence
-  dep :TSS
+  dep :TSS, :_compute => :produce
   task :mutation_info => :tsv do
-    #ns_mi, damaged_mi, truncated_mi, *annotations = dependencies
     damaged_mi, truncated_mi, *annotations = dependencies
 
     Step.wait_for_jobs(dependencies)
-    #Step.wait_for_jobs([damaged_mi, truncated_mi, annotations.first])
 
-    #ns_mi = Set.new ns_mi.load
     damaged_mi = Set.new damaged_mi.load
     truncated_mi = Set.new truncated_mi.load
 
-    #annotation_streams = annotations.collect{|dep| TSV.stream_flat2double(dep.path.open).stream }
     pasted_io = TSV.paste_streams(annotations, :fix_flat => true)
 
     ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :unnamed => true, :persist => true

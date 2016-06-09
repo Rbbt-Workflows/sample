@@ -1,6 +1,4 @@
 module Sample
-  dep :organism
-  dep :watson
   input :file, :file, "Input file"
   input :vcf, :boolean, "Input file is a VCF", false
   returns "Genomic Mutation"
