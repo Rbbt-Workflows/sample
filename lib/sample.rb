@@ -46,6 +46,12 @@ module Sample
     project_repo.glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }  
   end
 
+  def self.all_project_studies
+    all_projects.inject([]) do |acc,project|
+      acc.concat project_repo[project].glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }  
+    end
+  end
+
   def self.all_studies
     study_repo.glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }
   end
