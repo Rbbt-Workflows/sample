@@ -51,7 +51,6 @@ if Module === Sample and Workflow === Sample
       TSV.parse_header(Study.matrix_file(cohort, :gene_expression)).fields.include?(self)
     end
 
-
     property :mutations => :single do
       mutations = self.genomic_mutations
       GenomicMutation.setup(mutations, self, organism, watson)

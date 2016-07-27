@@ -1,20 +1,22 @@
 module Sample
 
-  dep :mi_damaged
-  dep :mi_truncated
-  dep :genomic_mutation_consequence, :non_synonymous => true
-  dep :genomic_mutation_gene_overlaps
-  dep :genomic_mutation_splicing_consequence
-  dep :TSS, :_compute => :produce
+  dep :mi, :compute => :produce
+  dep :mi_damaged, :compute => :produce
+  dep :mi_truncated, :compute => :produce
+  dep :genomic_mutation_consequence, :non_synonymous => true, :compute => :produce
+  dep :genomic_mutation_gene_overlaps, :compute => :produce
+  dep :genomic_mutation_splicing_consequence, :compute => :produce
+  dep :TSS, :compute => :produce
   task :mutation_info => :tsv do
-    damaged_mi, truncated_mi, *annotations = dependencies
+    mi, damaged_mi, truncated_mi, *annotations = dependencies
+    Step.wait_for_jobs mi
 
-    Step.wait_for_jobs(dependencies)
+    pasted_io = TSV.paste_streams(annotations, :fix_flat => true)
+
+    Step.wait_for_jobs([damaged_mi, truncated_mi])
 
     damaged_mi = Set.new damaged_mi.load
     truncated_mi = Set.new truncated_mi.load
-
-    pasted_io = TSV.paste_streams(annotations, :fix_flat => true)
 
     ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :unnamed => true, :persist => true
     enst2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Transcript ID"], :unnamed => true, :persist => true
@@ -93,8 +95,8 @@ module Sample
 
     #sets = dependencies[1..-1].collect{|dep| Set.new dep.load }
 
-    parser = TSV::Parser.new step(:gene_mutation_status)
-    fields = parser.fields + dependencies[1..-1].collect{|dep| dep.task.name.to_s.sub(/_genes/,'') }
+    parser = TSV::Parser.new TSV.get_stream step(:gene_mutation_status)
+    fields = parser.fields + dependencies[1..-1].collect{|dep| dep.task_name.to_s.sub(/_genes/,'') }
     dumper = TSV::Dumper.new parser.options.merge(:fields => fields)
     dumper.init
     TSV.traverse parser, :into => dumper do |gene,values|
