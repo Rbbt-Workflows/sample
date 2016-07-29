@@ -117,9 +117,9 @@ SNVTasks = Proc.new do
 
   dep :mi
   dep :organism
-  dep DbNSFP, :annotate, :mutations => :mi, :organism => :organism
+  dep DbNSFP, :score, :mutations => :mi, :organism => :organism
   task :DbNSFP => :tsv do
-    TSV.get_stream step(:annotate)
+    TSV.get_stream step(:score)
   end
 
   dep :DbNSFP
