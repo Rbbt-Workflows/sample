@@ -21,18 +21,20 @@ if Module === Sample and Workflow === Sample
         property name.to_sym => :single do |run=true, options={}|
           run, options = true, run if Hash === run
 
-        sample_code = self.sample_code
-        job = Sample.job(name.to_sym, sample_code, options)
-        case run
-        when nil, TrueClass
-          job.fork.join
-          raise job.get_exception if job.error?
-          job.load
-        when :path
-          job.run(true).join.path
-        else
-          job
-        end
+          sample_code = self.sample_code
+          job = Sample.job(name.to_sym, sample_code, options)
+          case run
+          when nil, TrueClass
+            job.produce(false,true)
+            raise job.get_exception if job.error?
+            job.load
+          when :path
+            job.produce(false,true)
+            raise job.get_exception if job.error?
+            job.path
+          else
+            job
+          end
         end
       end
     end

@@ -46,7 +46,7 @@ module Sample
   end
 
   dep :genomic_mutations
-  dep Sequence, :affected_genes, :mutations => :genomic_mutations, :organism => :organism, :watson => :watson
+  dep Sequence, :affected_genes, :mutations => :genomic_mutations, :organism => :organism, :watson => :watson, :coding => true
   task :compound_mutations => :array do
     tsv = step(:affected_genes).join.path.tsv :key_field => "Ensembl Gene ID", :merge => true, :type => :flat
     tsv.select{|g,ms| ms.length > 1 }.values.flatten.compact.sort.uniq

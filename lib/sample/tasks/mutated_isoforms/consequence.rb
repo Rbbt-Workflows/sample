@@ -3,13 +3,13 @@ Workflow.require_workflow "Sequence"
 module Sample
 
   dep :genomic_mutations
-  dep Sequence, :affected_genes, :mutations => :genomic_mutations, :vcf => false, :organism => :organism, :watson => :watson
+  dep Sequence, :affected_genes, :mutations => :genomic_mutations, :vcf => false, :organism => :organism, :watson => :watson, :coding => true
   task :affected_genes => :tsv do 
     TSV.get_stream(step(:affected_genes))
   end
 
   dep :genomic_mutations
-  dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :vcf => false, :organism => :organism, :watson => :watson
+  dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :vcf => false, :organism => :organism, :watson => :watson, :coding => true
   task :consequence => :tsv do 
     TSV.get_stream step(:mutated_isoforms_fast)
   end

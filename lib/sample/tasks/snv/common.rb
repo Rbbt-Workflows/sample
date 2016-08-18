@@ -71,7 +71,7 @@ SNVTasks = Proc.new do
   dep :organism
   dep :watson
   dep :genomic_mutations
-  dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :organism => :organism, :vcf => false, :watson => :watson
+  dep Sequence, :mutated_isoforms_fast, :mutations => :genomic_mutations, :organism => :organism, :vcf => false, :watson => :watson, :coding => true
   task :genomic_mutation_consequence => :tsv do
     TSV.get_stream step(:mutated_isoforms_fast)
   end
