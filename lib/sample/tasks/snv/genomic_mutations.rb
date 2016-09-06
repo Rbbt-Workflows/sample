@@ -15,7 +15,7 @@ module Sample
              else
                TSV.get_stream Sample.mutations(sample)
              end
-    sorted = CMD.cmd('grep ":" | sort -u | sed "s/^M:/MT:/" | env LC_ALL=C sort -k1,1 -k2,2n -t:', :in => stream, :pipe => true, :no_fail => true)
+    sorted = Misc.sort_mutations(stream)
     mappable_regions = Sample.mappable_regions(sample)
     Path.setup(mappable_regions)
     if mappable_regions

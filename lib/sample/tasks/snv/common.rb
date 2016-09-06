@@ -132,7 +132,7 @@ SNVTasks = Proc.new do
     end
   end
 
-  dep :mi, :principal => true
+  dep :mi #, :principal => true
   task :kinmut => :tsv do
     begin
       Workflow.require_workflow "KinMut2"
@@ -172,7 +172,6 @@ SNVTasks = Proc.new do
       mi = mi.first if Array === mi
       [mi, [values[1].uniq]]
     end
-    CMD.cmd('sort -u', :in => dumper.stream, :pipe => true)
   end
 
   dep :interfaces
@@ -190,6 +189,20 @@ SNVTasks = Proc.new do
       ps.extend MultipleResult
       ps
     end
+  end
+
+  dep :mi
+  dep :organism
+  dep Structure, :annotate_mi, :mutated_isoforms => :mi, :organism => :organism
+  task :annotate_mi => :tsv do
+    TSV.get_stream(step(:annotate_mi))
+  end
+
+  dep :mi
+  dep :organism
+  dep Structure, :annotate_mi_neighbours, :mutated_isoforms => :mi, :organism => :organism
+  task :annotate_mi_neighbours => :tsv do
+    TSV.get_stream(step(:annotate_mi_neighbours))
   end
 
   dep :mi
