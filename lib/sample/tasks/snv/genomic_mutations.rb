@@ -15,7 +15,7 @@ module Sample
              else
                TSV.get_stream Sample.mutations(sample)
              end
-    sorted = Misc.sort_mutations(stream)
+    sorted = Misc.sort_mutation_stream(stream)
     mappable_regions = Sample.mappable_regions(sample)
     Path.setup(mappable_regions)
     if mappable_regions
