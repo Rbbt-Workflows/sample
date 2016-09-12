@@ -291,7 +291,7 @@ SNVTasks = Proc.new do
                 if all_protein_mis
                   prediction_job = DbNSFP.job(:score, "all_" + protein, :mutations => all_protein_mis)
                   prediction_job.produce
-                  prediction_job.path.tsv(:fields => [damage_field], :type => :single, :cast => :to_f, :unnamed => true).values.flatten.compact.reject{|v| v == -999 }
+                  TSV.open(Open.open(prediction_job.path, :nocache => true), :fields => [damage_field], :type => :single, :cast => :to_f, :unnamed => true).values.flatten.compact.reject{|v| v == -999 }
                 else
                   nil
                 end
