@@ -61,6 +61,7 @@ module Sample
     organism = step(:organism).load
     gene_status = TSV.setup({}, :key_field => "Ensembl Gene ID", :fields => ["CNV status"], :namespace => organism, :type => :flat)
     TSV.traverse cnv_genes, :bar => "Processing CNV genes" do |cnv,genes|
+      cnv = cnv.first if Array === cnv
       chr,start,eend,*rest = cnv.split(":")
 
       status = cnv_status rest

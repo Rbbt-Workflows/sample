@@ -9,11 +9,8 @@ module Sample
   dep :TSS, :compute => :produce
   task :mutation_info => :tsv do
     mi, damaged_mi, truncated_mi, *annotations = dependencies
-    Step.wait_for_jobs mi
 
     pasted_io = TSV.paste_streams(annotations, :fix_flat => true)
-
-    Step.wait_for_jobs([damaged_mi, truncated_mi])
 
     damaged_mi = Set.new damaged_mi.load
     truncated_mi = Set.new truncated_mi.load
