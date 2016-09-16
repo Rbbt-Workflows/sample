@@ -63,7 +63,7 @@ SNVTasks = Proc.new do
 
   dep :organism
   dep :genomic_mutations
-  dep Sequence, :splicing_mutations, :mutations => :genomic_mutations, :organism => :organism, :vcf => false
+  dep Sequence, :splicing_mutations, :mutations => :genomic_mutations, :organism => :organism, :vcf => false, :watson => true
   task :genomic_mutation_splicing_consequence => :tsv do
     TSV.get_stream step(:splicing_mutations)
   end
@@ -76,7 +76,7 @@ SNVTasks = Proc.new do
     TSV.get_stream step(:mutated_isoforms_fast)
   end
 
-  dep :genomic_mutation_consequence
+  dep :genomic_mutation_consequence, :non_synonymous => true
   task :mi => :array do
     TSV.traverse step(:genomic_mutation_consequence), :into => :stream, :bar => "Processing MIs" do |mut, mis|
       mis = mis.reject{|mi| mi =~ /ENST|:([*A-Z])\d+\1$/}
