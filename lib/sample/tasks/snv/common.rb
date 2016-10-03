@@ -328,4 +328,10 @@ SNVTasks = Proc.new do
     TSV.get_stream step(:sequence_ontology)
   end
 
+  dep :genomic_mutations
+  dep Sequence, :intersect_bed, :positions => :genomic_mutations
+  task :intersect_bed => :tsv do
+    TSV.get_stream step(:intersect_bed)
+  end
+
 end

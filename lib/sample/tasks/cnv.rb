@@ -73,7 +73,9 @@ module Sample
       end
     end
 
-    gene_status
+    gene_status.to_list do |values|
+      values.uniq * ";"
+    end
   end
 
 end
