@@ -40,7 +40,6 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
 
    cnv.rb
 
-
    # NOT USED!!!
    #  |
    #  v
