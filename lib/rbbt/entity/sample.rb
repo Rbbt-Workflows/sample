@@ -80,6 +80,42 @@ if Module === Sample and Workflow === Sample
                 self.gene_mutation_status.select(:damaged_mutated_isoform => "true").keys
               when :broken
                 self.gene_mutation_status.select(:broken => "true").keys
+              when :lost
+                if self.has_cnv?
+                  tsv = self.gene_cnv_status
+                  lost = tsv.select("CNV status" => "loss").keys
+                  lost.concat tsv.select("CNV status" => "complete_loss").keys
+                  lost
+                else
+                  []
+                end
+              when :completly_lost
+                if self.has_cnv?
+                  self.gene_cnv_status.select("CNV status" => "complete_loss").keys
+                else
+                  []
+                end
+              when :gained
+                if self.has_cnv?
+                  tsv = self.gene_cnv_status
+                  gained = tsv.select("CNV status" => "gain").keys
+                  gained.concat tsv.select("CNV status" => "big_gain").keys
+                  gained
+                else
+                  []
+                end
+              when :big_gain
+                if self.has_cnv?
+                  self.gene_cnv_status.select("CNV status" => "big_gain").keys
+                else
+                  []
+                end
+              when :LOH
+                if self.has_cnv?
+                  self.gene_cnv_status.select("CNV status" => "LOH").keys
+                else
+                  []
+                end
               else
                 raise "Cannot understand #{ type }"
               end
