@@ -25,11 +25,11 @@ if Module === Sample and Workflow === Sample
           job = Sample.job(name.to_sym, sample_code, options)
           case run
           when nil, TrueClass
-            job.produce(false,true)
+            job.produce
             raise job.get_exception if job.error?
             job.load
           when :path
-            job.produce(false,true)
+            job.produce
             raise job.get_exception if job.error?
             job.path
           else
@@ -47,7 +47,8 @@ if Module === Sample and Workflow === Sample
     end
 
     property :has_genotype? => :single do
-      Sample.sample_dir(sample_code)
+      path = Sample.sample_dir(sample_code)
+      path and path.exists?
     end
 
     property :has_gene_expression? => :single do

@@ -1,0 +1,36 @@
+- entity_list_card = EntityListCard.new list, list_id
+
+- study = list.study
+- if list.study and TSV === list.study.sample_info and list.study.sample_info.fields.length > 0
+  - entity_list_card.description do
+    - sample_info = list.study.sample_info.select(list)
+
+    - genotyped_samples = list.select(:has_genotype?)
+    - if genotyped_samples.any?
+      - sample_info.add_field("Genotyped") do |sample,values|
+        - sample.has_genotype? ? true : false
+
+    - if study.has_cnv?
+      - cnv_samples = list.select(:has_cnv?)
+      - sample_info.add_field("CNV") do |sample,values|
+        - cnv_samples.include? sample
+
+    - if study.matrices.any?
+      - study.matrices.each do |matrix_name|
+        - matrix = study.matrix(matrix_name)
+        - matrix_samples = matrix.samples
+        - sample_info.add_field("Matrix #{ matrix_name }") do |sample,values|
+          - (matrix_samples & values.flatten).any? or matrix_samples.include?(sample)
+
+    %p #{list.length} samples
+
+    = fragment do
+      = table :table_id => "Clinical features of #{ list_id }" do
+        - sample_info.select do |k,v| 
+          - ([k,v].flatten & list).any?
+
+- entity_list_card.action_controller = default_action_controller list, list_id
+
+= entity_list_card_render entity_list_card
+
+

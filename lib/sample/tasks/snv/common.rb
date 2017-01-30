@@ -177,7 +177,7 @@ SNVTasks = Proc.new do
   dep :interfaces
   task :broken_ppi => :tsv do
     ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :persist => true
-    dumper = TSV::Dumper.new :key_field => "Mutated Isoform", :fields => ["Ensembl Protein ID", "Partner Ensembl Protein ID"], :type => :list, :namespace => organism
+    dumper = TSV::Dumper.new :key_field => "Mutated Isoform", :fields => ["Ensembl Gene ID", "Partner (Ensembl Gene ID)"], :type => :list, :namespace => organism
     dumper.init
     TSV.traverse step(:interfaces), :into => dumper do |mi, values|
       mi = mi.first if Array === mi

@@ -88,6 +88,9 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
      mutation_annotations.haml
     }
    }
+   entity_list=entity_list{
+    Sample.haml
+   }
   }
  }
 

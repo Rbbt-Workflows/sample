@@ -54,7 +54,7 @@ module Sample
     end
   end
 
-  dep :mutation_info
+  dep :mutation_info, :compute => :produce
   task :gene_mutation_status => :tsv do
     parser = TSV::Parser.new step(:mutation_info)
     key_field, *fields = parser.fields
