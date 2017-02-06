@@ -118,7 +118,11 @@ if Module === Sample and Workflow === Sample
                   []
                 end
               else
-                raise "Cannot understand #{ type }"
+                begin
+                  self.gene_mutation_status.select(type.to_s => "true").keys
+                rescue
+                  raise "Cannot understand #{ type }"
+                end
               end
       Gene.setup(genes.dup, "Ensembl Gene ID", organism).extend AnnotatedArray
     end
