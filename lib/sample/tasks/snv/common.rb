@@ -86,6 +86,14 @@ SNVTasks = Proc.new do
     end
   end
 
+  dep :genomic_mutation_consequence, :non_synonymous => false
+  task :all_mi => :array do
+    TSV.traverse step(:genomic_mutation_consequence), :into => :stream, :bar => "Processing MIs" do |mut, mis|
+      mis.extend MultipleResult
+      mis
+    end
+  end
+
   dep :mi
   task :mi_truncated => :array do 
     ensp2sequence = Organism.protein_sequence(organism).tsv :persist => true, :unnamed => true
