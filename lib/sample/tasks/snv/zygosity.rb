@@ -27,6 +27,7 @@ module Sample
     homozygous = Set.new step(:homozygous).load
     enspt2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Transcript ID", "Ensembl Protein ID"], :unnamed => true, :persist => true
     io = TSV.traverse TSV.paste_streams([step(:genomic_mutation_consequence), step(:genomic_mutation_splicing_consequence)], :sort => true), :into => :stream do |mut,values|
+      mut = mut.first if Array === mut
       next unless homozygous.include? mut
       genes = []
       values.flatten.each do |v|
