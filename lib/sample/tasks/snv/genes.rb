@@ -1,5 +1,6 @@
 module Sample
 
+  dep :genomic_mutations, :compute => :produce
   dep :mi, :compute => :produce
   dep :mi_damaged, :compute => :produce
   dep :mi_truncated, :compute => :produce
@@ -8,7 +9,7 @@ module Sample
   dep :genomic_mutation_splicing_consequence, :compute => :produce
   dep :TSS, :compute => :produce
   task :mutation_info => :tsv do
-    mi, damaged_mi, truncated_mi, *annotations = dependencies
+    muts, mi, damaged_mi, truncated_mi, *annotations = dependencies
 
     pasted_io = TSV.paste_streams(annotations, :fix_flat => true)
 
