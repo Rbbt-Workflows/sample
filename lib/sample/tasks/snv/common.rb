@@ -63,6 +63,23 @@ SNVTasks = Proc.new do
 
   dep :organism
   dep :genomic_mutations
+  dep Sequence, :exons, :positions => :genomic_mutations, :organism => :organism, :vcf => false
+  task :genomic_mutation_gene_exon_overlaps => :tsv do
+
+    exon2gene = Organism.exons(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Exon ID"], :persist => true
+    dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Ensembl Gene ID"], :type => :flat, :namespace => organism
+    dumper.init
+    TSV.traverse step(:exons), :into => dumper do |mut, exons|
+      mut = mut.first if Array === mut
+      genes = exon2gene.values_at *exons
+      genes = genes.compact.uniq
+      next if genes.empty?
+      [mut, genes]
+    end
+  end
+
+  dep :organism
+  dep :genomic_mutations
   dep Sequence, :splicing_mutations, :mutations => :genomic_mutations, :organism => :organism, :vcf => false, :watson => true
   task :genomic_mutation_splicing_consequence => :tsv do
     TSV.get_stream step(:splicing_mutations)
@@ -131,10 +148,12 @@ SNVTasks = Proc.new do
   end
 
   dep :DbNSFP
-  input :field, :string, "Damage score field from DbNSFP", "MetaSVM_score"
-  task :mi_damaged => :array do |field|
+  input :dbNSFP_field, :string, "Damage score field from DbNSFP", "MetaSVM_score"
+  input :dbNSFP_threshold, :string, "Damage score threshold", 0
+  input :dbNSFP_above, :boolean, "Damage score must be above threshold", true
+  task :mi_damaged => :array do |field, threshold, above|
     TSV.traverse step(:DbNSFP), :fields => [field], :type => :single, :cast => :to_f, :into => :stream, :bar => "MI damaged" do |mi, score|
-      next nil unless score > 0
+      next nil unless above ? (score > threshold) : (score < threshold)
       mi.extend MultipleResult if Array === mi
       mi
     end
@@ -340,6 +359,45 @@ SNVTasks = Proc.new do
   dep Sequence, :intersect_bed, :positions => :genomic_mutations
   task :intersect_bed => :tsv do
     TSV.get_stream step(:intersect_bed)
+  end
+
+  dep :genomic_mutation_consequence, :compute => :produce
+  dep :genomic_mutation_splicing_consequence, :compute => :produce
+  dep :mi_damaged, :compute => :produce
+  dep :mi_truncated, :compute => :produce
+  task :damaging_mutations => :array do 
+    mutations = Set.new
+    con = step(:genomic_mutation_consequence)
+    spli = step(:genomic_mutation_splicing_consequence).load
+    dam = step(:mi_damaged).load
+    trunc = step(:mi_truncated).load
+    mutations += spli.keys
+    TSV.traverse con, :into => mutations do |mut, mis|
+      keep = false
+      keep = true if (dam & mis).any?
+      keep = true if (trunc & mis).any?
+      next unless keep
+      mut
+    end
+
+    mutations.to_a
+  end
+
+  dep :genomic_mutation_consequence, :compute => :produce
+  dep :damaging_mutations, :compute => :produce
+  dep :mi_annotations, :compute => :produce
+  task :important_mutations => :array do
+    con = step(:genomic_mutation_consequence).load
+    mutations = Set.new step(:damaging_mutations).load
+    annotations = step(:mi_annotations).load.keys
+    TSV.traverse con, :into => mutations do |mut, mis|
+      keep = false
+      keep = true if (annotations & mis).any?
+      next unless keep
+      mut
+    end
+
+    mutations.to_a
   end
 
 end
