@@ -26,7 +26,11 @@ if Module === Sample and Workflow === Sample
           case run
           when nil, TrueClass
             job.produce
-            raise job.get_exception if job.error?
+
+            Misc.insist do
+              raise (job.get_exception || "Job exception in #{job.path}: #{job.messages.last || "No messages"} [#{job.status}]") if job.error?
+            end
+
             job.load
           when :path
             job.produce
