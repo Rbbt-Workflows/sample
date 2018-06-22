@@ -48,7 +48,7 @@ module Sample
   task :missing_genes => :array do 
     streams = dependencies.collect{|dep| TSV.get_stream dep }
     io = Misc.intercalate_streams streams
-    CMD.cmd('sort -u', :in => io, :pipe => true)
+    io.read.split("\n").sort.uniq
   end
 
 end
