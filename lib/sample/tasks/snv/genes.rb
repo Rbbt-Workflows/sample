@@ -5,7 +5,7 @@ module Sample
   dep :mi_damaged, :compute => :produce
   dep :mi_truncated, :compute => :produce
   dep :genomic_mutation_consequence, :non_synonymous => true, :compute => :produce
-  dep :genomic_mutation_gene_overlaps, :compute => :produce
+  dep :genomic_mutation_gene_exon_overlaps, :compute => :produce
   dep :genomic_mutation_splicing_consequence, :compute => :produce
   dep :TSS, :compute => :produce
   task :mutation_info => :tsv do
