@@ -25,7 +25,8 @@ if Module === Sample and Workflow === Sample
           job = Sample.job(name.to_sym, sample_code, options)
           case run
           when nil, TrueClass
-            job.produce
+            job.clean if job.recoverable_error?
+            job.produce unless job.done?
 
             Misc.insist do
               raise (job.get_exception || "Job exception in #{job.path}: #{job.messages.last || "No messages"} [#{job.status}]") if job.error?

@@ -5,6 +5,7 @@ module Sample
   task :genomic_mutations => :array do |file, vcf|
     stream = if file
                if vcf
+                 file = file.dumper_stream if TSV === file
                  job = Sequence.job(:genomic_mutations, sample, :vcf_file => file)
                  #TSV.get_stream job.run(true)
                  job.produce

@@ -103,6 +103,18 @@ SNVTasks = Proc.new do
     end
   end
 
+  dep :genomic_mutation_consequence, :non_synonymous => true
+  task :___mi => :array do
+    TSV.traverse step(:genomic_mutation_consequence), :type => :array, :into => [], :bar => "Processing MIs" do |line|
+      next if line =~/^#/
+      mut, *mis = line.chomp.split("\t")
+      mis = mis.reject{|mi| mi =~ /ENST|:([*A-Z])\d+\1$/}
+      next if mis.empty?
+      mis.extend MultipleResult
+      mis
+    end
+  end
+
   dep :genomic_mutation_consequence, :non_synonymous => false
   task :all_mi => :array do
     TSV.traverse step(:genomic_mutation_consequence), :into => :stream, :bar => "Processing MIs" do |mut, mis|
