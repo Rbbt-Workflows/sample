@@ -42,8 +42,8 @@ SNVTasks = Proc.new do
 
   dep :genomic_mutations
   task :num_genomic_mutations => :integer do
-    io = TSV.get_stream step(:genomic_mutations)
-    CMD.cmd('wc -l', :in => io).read
+    step(:genomic_mutations).join
+    CMD.cmd("wc -l #{step(:genomic_mutations).path}").read.to_i
   end
 
   dep :annotate_DbSNP
