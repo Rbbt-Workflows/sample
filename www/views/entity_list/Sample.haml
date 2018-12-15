@@ -1,7 +1,7 @@
 - entity_list_card = EntityListCard.new list, list_id
 
 - study = list.study
-- if list.study and TSV === list.study.sample_info and list.study.sample_info.fields.length > 0
+- if list.study and ! list.study.empty? and TSV === list.study.sample_info and list.study.sample_info.fields.length > 0
   - entity_list_card.description do
     - sample_info = list.study.sample_info.select(list)
 
