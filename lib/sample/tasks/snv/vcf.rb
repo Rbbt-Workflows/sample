@@ -2,7 +2,7 @@ module Sample
 
   input :file, :file, "Input file"
   input :vcf, :boolean, "Input file is a VCF", false
-  task :extended_vcf => :string do |file,vcf|
+  task :expanded_vcf => :string do |file,vcf|
     if vcf and file
       vcf_file = file
       if String === vcf_file and not File.exists? vcf_file
@@ -28,12 +28,12 @@ module Sample
     files * "\n"
   end
 
-  dep :extended_vcf
+  dep :expanded_vcf
   task :homozygous => :array do
     Step.wait_for_jobs dependencies
     stream = Misc.open_pipe do |sin|
-      step(:extended_vcf).files.each do |basename|
-        file = step(:extended_vcf).file(basename)
+      step(:expanded_vcf).files.each do |basename|
+        file = step(:expanded_vcf).file(basename)
         fields = TSV.parse_header(file).fields
         s = sample.split(":").last
 
@@ -53,13 +53,14 @@ module Sample
     CMD.cmd('uniq', :in => stream, :pipe => true)
   end
 
-  dep :extended_vcf
+  # ToDo: Debug this method
+  dep :expanded_vcf
   task :quality => :array do
     dumper = TSV::Dumper.new :key_field => "Genomic Mutation", :fields => ["Quality", "Filter"], :organism => organism, :type => :list
     dumper.init
     Thread.new do
-      step(:extended_vcf).files.each do |basename|
-        file = step(:extended_vcf).file(basename)
+      step(:expanded_vcf).files.each do |basename|
+        file = step(:expanded_vcf).file(basename)
         s = sample.split(":").last
         TSV.traverse file, :fields => ["Quality", "Filter"], :type => :list, :bar => "Quality #{basename}" do |mutation,values|
           qual, filt = values
