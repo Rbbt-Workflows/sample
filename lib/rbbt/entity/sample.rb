@@ -29,7 +29,12 @@ if Module === Sample and Workflow === Sample
             job.produce unless job.done?
 
             Misc.insist do
-              raise (job.get_exception || "Job exception in #{job.path}: #{job.messages.last || "No messages"} [#{job.status}]") if job.error?
+              if e = job.get_exception
+                Log.warn "Exception in #{job.path}: #{e.message}"
+                raise e
+              else
+                raise "Job exception in #{job.path}: #{job.messages.last || "No messages"} [#{job.status}]"
+              end if job.error?
             end
 
             job.load
