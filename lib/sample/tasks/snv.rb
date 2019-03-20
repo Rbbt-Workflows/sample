@@ -3,6 +3,7 @@ Workflow.require_workflow "Sequence"
 require 'sample/tasks/snv/vcf'
 require 'sample/tasks/snv/genomic_mutations'
 require 'sample/tasks/snv/common'
+require 'sample/tasks/snv/maf'
 
 Sample.instance_eval &SNVTasks
 
