@@ -20,7 +20,9 @@ module Sample
       return sample_dir.genotype.find
     else
       Misc.open_pipe do |sin|
-        vcf_files(sample).each do |file|
+        vcfs = vcf_files(sample)
+        raise "No sample data for: #{ sample }" if vcfs.empty?
+        vcfs.each do |file|
           job = Sequence.job(:genomic_mutations, sample, :vcf_file => file, :quality => nil)
           job.run(true)
           TSV.traverse job, :type => :array do |line|
