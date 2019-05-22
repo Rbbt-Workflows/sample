@@ -40,6 +40,8 @@ require 'sample/tasks/mutation_signatures'
 
 require 'sample/tasks/snv'
 require 'sample/tasks/cnv'
+require 'sample/tasks/vcf'
+require 'sample/tasks/mutated_isoforms'
 
 
 require 'rbbt/entity/sample'
