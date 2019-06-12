@@ -12,6 +12,8 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
 
   tasks=sample/tasks{
    snv.rb
+
+   vcf.rb
    snv=snv{
     vcf.rb
 
@@ -63,8 +65,6 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
    }
 
    cnvs.rb
-
-   vcf.rb
 
   }
 

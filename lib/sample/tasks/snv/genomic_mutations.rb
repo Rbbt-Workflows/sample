@@ -7,7 +7,6 @@ module Sample
                if vcf
                  file = file.dumper_stream if TSV === file
                  job = Sequence.job(:genomic_mutations, sample, :vcf_file => file)
-                 #TSV.get_stream job.run(true)
                  job.produce
                  TSV.get_stream job
                else
@@ -32,13 +31,12 @@ module Sample
   dep :genomic_mutations
   dep :organism
   dep :watson
-  dep Sequence, :reference, :positions => :genomic_mutations, :organism => :organism
   dep Sequence, :type, :mutations => :genomic_mutations, :organism => :organism, :watson => :watson
   dep MutationSignatures, :mutation_context, :mutations => :genomic_mutations, :organism => :organism
-  dep :extended_vcf
+  dep :expanded_vcf
   task :mutation_details => :tsv do
     if Sample.vcf_files(sample).any?
-      exteded_vcf_step = step(:extended_vcf)
+      exteded_vcf_step = step(:expanded_vcf)
       exteded_vcf = TSV.open(exteded_vcf_step.file(exteded_vcf_step.run))
       code = sample.split(":").last
       good_fields = exteded_vcf.fields.select{|f| f =~ /#{code}:/ or f == "Quality"}
@@ -55,7 +53,7 @@ module Sample
       :type => :list, :namespace => organism
 
     dumper.init
-    TSV.traverse pasted, :into => dumper do |mutation, *values|
+    TSV.traverse pasted, :into => dumper do |mutation,values,fields|
       reference,type, context, *vcf = values.flatten
       mutation = mutation.first if Array === mutation
       chromosome, position, change, *rest = mutation.split":"
