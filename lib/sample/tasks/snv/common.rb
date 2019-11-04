@@ -333,9 +333,10 @@ SNVTasks = Proc.new do
     end
 
     bg_proteins = protein_scores.select{|k,v| v.length >= 3}.collect{|k,v| k}
-    TSV.traverse bg_proteins, :fields => [damage_field], :type => :array, :cpus => 10, :bar => self.progress_bar("Computing background protein damage scores"), :into => protein_bg_scores do |protein|
+    cpus = config('cpus', 'gene_damage_bias', :default => 1)
+    TSV.traverse bg_proteins, :fields => [damage_field], :type => :array, :cpus => cpus, :bar => self.progress_bar("Computing background protein damage scores"), :into => protein_bg_scores do |protein|
       scores = begin
-                all_protein_mis = DbNSFP.job(:possible_mutations, clean_name + ' ' + protein, :protein => protein).exec
+                all_protein_mis = DbNSFP.job(:possible_mutations, protein, :protein => protein).run
                 if all_protein_mis
                   prediction_job = DbNSFP.job(:score, "all_" + protein, :mutations => all_protein_mis)
                   prediction_job.produce
