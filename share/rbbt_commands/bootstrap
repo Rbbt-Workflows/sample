@@ -32,9 +32,11 @@ if options[:workflows]
   end
 end
 
+Sample.update_task_properties
+
 rbbt_usage and exit 0 if options[:help]
 
-Sample.study_repo = Path.setup(ARGV.shift.dup) if ARGV.any? 
+Sample.study_repo = Path.setup(ARGV.shift.dup) if ARGV.any? and File.directory?(ARGV.first)
 
 if ARGV.any?
   studies = Study.setup(ARGV.shift.split(","))
