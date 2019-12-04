@@ -39,21 +39,21 @@ module Sample
   end
 
   def self.all_samples
-    sample_repo.glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }
+    sample_repo.glob_all("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }
   end
 
   def self.all_projects
-    project_repo.glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }  
+    project_repo.glob_all("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }
   end
 
   def self.all_project_studies
     all_projects.inject([]) do |acc,project|
-      acc.concat project_repo[project].glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }  
+      acc.concat project_repo[project].glob_all("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }
     end
   end
 
   def self.all_studies
-    study_repo.glob("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }
+    study_repo.glob_all("*").select{|d| File.directory? d }.collect{|s| File.basename(s) }
   end
 
   def self.study_dir(code)
@@ -74,7 +74,7 @@ module Sample
       #return study_dir.genotypes.vcf if study_dir.genotypes.vcf[sample + ".vcf*"].glob.any?
       return study_dir
     else
-      return sample_repo[sample] 
+      return sample_repo[sample]
     end
 
     nil
