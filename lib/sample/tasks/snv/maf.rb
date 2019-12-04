@@ -79,13 +79,15 @@ module Sample
   dep :sequence_ontology, :compute => :produce
   dep :organism
   dep Sequence, :reference, :positions => :genomic_mutations, :organism => :organism, :compute => :produce
-  task :maf_file => :text do
+  task :maf_file => :tsv do
 
     ensg2name = Organism.identifiers(organism).index :target => "Associated Gene Name", :fields => ["Ensembl Gene ID"], :persist => true, :unnamed => true
     ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :persist => true, :unnamed => true
     enst2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Transcript ID"], :persist => true, :unnamed => true
     gene_strand = Organism.gene_positions(organism).tsv :fields => ["Strand"], :type => :single, :persist => true, :unnamed => true
+
     pasted = TSV.paste_streams([step(:reference), step(:sequence_ontology)])
+
     dumper = TSV::Dumper.new :key_field => "Mutation ID", :fields => MAF_FIELDS, :type => :list
     dumper.init(:header_hash => "", :preamble => false)
     TSV.traverse pasted, :type => :double, :into => dumper do |mutation,values|
@@ -185,5 +187,47 @@ module Sample
       end
       result
     end
+  end
+
+  dep :genomic_mutations
+  dep :maf_file
+  dep :expanded_vcf, :canfail => true
+  dep :organism
+  dep Sequence, :transcript_offsets, :positions => :genomic_mutations, :organism => :organism
+  task :maf_file2 => :tsv do
+    tsv = step(:maf_file).join.path.tsv :header_hash => ''
+    tsv.key_field = "Genomic Mutation"
+    mis = step(:mutated_isoforms_fast).load
+
+    tsv = tsv.attach mis
+
+    expanded_vcf = begin
+                     step(:expanded_vcf)
+                   rescue
+                     nil
+                   end
+
+    if expanded_vcf
+      tsv = tsv.attach step(:expanded_vcf).load
+    end
+
+    offsets = step(:transcript_offsets).load
+
+    tsv.add_field "Standard cDNA mutation" do |mutation,values|
+      chr, pos, alt = mutation.split(":")
+      chr = "chr" + chr unless chr =~ /^chr/
+      [chr + ":g." + pos + values["Reference_Allele"].first + ">" + values["Tumor_Seq_Allele1"].first]
+    end
+
+    tsv.add_field "Standard cDNA mutation" do |mutation,values|
+      if offsets[mutation]
+        offsets[mutation].collect do |v|
+          transcript, position, strand = v.split(":")
+          transcript + ":" + "c." + (position.to_i + 1).to_s + values["Reference_Allele"].first + ">" + values["Tumor_Seq_Allele1"].first
+        end 
+      end
+    end
+
+    tsv
   end
 end

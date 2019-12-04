@@ -5,6 +5,7 @@ Workflow.require_workflow "GERP"
 Workflow.require_workflow "DbSNP"
 Workflow.require_workflow "DbNSFP"
 Workflow.require_workflow "EVS"
+Workflow.require_workflow "ExAC"
 
 
 require 'rbbt/sources/InterPro'
@@ -41,6 +42,13 @@ SNVTasks = Proc.new do
   end
 
   dep :genomic_mutations
+  dep :organism 
+  dep ExAC, :annotate, :mutations => :genomic_mutations, :organism => :organism
+  task :annotate_ExAC => :tsv do
+    TSV.get_stream step(:annotate)
+  end
+
+  dep :genomic_mutations
   task :num_genomic_mutations => :integer do
     step(:genomic_mutations).join
     CMD.cmd("wc -l #{step(:genomic_mutations).path}").read.to_i
@@ -50,8 +58,9 @@ SNVTasks = Proc.new do
   dep :annotate_Genomes1000
   dep :annotate_GERP
   dep :annotate_EVS
+  dep :annotate_ExAC
   task :genomic_mutation_annotations => :tsv do
-    TSV.paste_streams dependencies, :sort => true
+    TSV.paste_streams dependencies, :sort => true, :field_prefix => ["DbSNP", "Genomes1000", "GERP", "EVS", "ExAC"]
   end
 
   dep :organism
@@ -324,9 +333,10 @@ SNVTasks = Proc.new do
     end
 
     bg_proteins = protein_scores.select{|k,v| v.length >= 3}.collect{|k,v| k}
-    TSV.traverse bg_proteins, :fields => [damage_field], :type => :array, :cpus => 10, :bar => self.progress_bar("Computing background protein damage scores"), :into => protein_bg_scores do |protein|
+    cpus = config('cpus', 'gene_damage_bias', :default => 1)
+    TSV.traverse bg_proteins, :fields => [damage_field], :type => :array, :cpus => cpus, :bar => self.progress_bar("Computing background protein damage scores"), :into => protein_bg_scores do |protein|
       scores = begin
-                all_protein_mis = DbNSFP.job(:possible_mutations, clean_name + ' ' + protein, :protein => protein).exec
+                all_protein_mis = DbNSFP.job(:possible_mutations, protein, :protein => protein).run
                 if all_protein_mis
                   prediction_job = DbNSFP.job(:score, "all_" + protein, :mutations => all_protein_mis)
                   prediction_job.produce
