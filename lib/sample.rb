@@ -74,7 +74,7 @@ module Sample
       #return study_dir.genotypes.vcf if study_dir.genotypes.vcf[sample + ".vcf*"].glob.any?
       return study_dir
     else
-      return sample_repo[sample] 
+      return sample_repo[sample]
     end
 
     nil
