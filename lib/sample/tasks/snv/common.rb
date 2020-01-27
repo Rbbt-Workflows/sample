@@ -6,6 +6,7 @@ Workflow.require_workflow "DbSNP"
 Workflow.require_workflow "DbNSFP"
 Workflow.require_workflow "EVS"
 Workflow.require_workflow "ExAC"
+Workflow.require_workflow "GnomAD"
 
 
 require 'rbbt/sources/InterPro'
@@ -49,18 +50,23 @@ SNVTasks = Proc.new do
   end
 
   dep :genomic_mutations
+  dep :organism 
+  dep_task :annotate_GnomAD, GnomAD, :annotate, :mutations => :genomic_mutations, :organism => :organism
+
+  dep :genomic_mutations
   task :num_genomic_mutations => :integer do
     step(:genomic_mutations).join
     CMD.cmd("wc -l #{step(:genomic_mutations).path}").read.to_i
   end
 
-  dep :annotate_DbSNP
-  dep :annotate_Genomes1000
-  dep :annotate_GERP
-  dep :annotate_EVS
-  dep :annotate_ExAC
+  dep :annotate_DbSNP, :compute => :bootstrap
+  dep :annotate_Genomes1000, :compute => :bootstrap
+  dep :annotate_GERP, :compute => :bootstrap
+  dep :annotate_EVS, :compute => :bootstrap
+  dep :annotate_ExAC, :compute => :bootstrap
+  dep :annotate_GnomAD, :compute => :bootstrap
   task :genomic_mutation_annotations => :tsv do
-    TSV.paste_streams dependencies, :sort => true, :field_prefix => ["DbSNP", "Genomes1000", "GERP", "EVS", "ExAC"]
+    TSV.paste_streams dependencies, :sort => true, :field_prefix => ["DbSNP", "Genomes1000", "GERP", "EVS", "ExAC", "GnomAD"]
   end
 
   dep :organism
@@ -167,6 +173,14 @@ SNVTasks = Proc.new do
   task :DbNSFP => :tsv do
     TSV.get_stream step(:score)
   end
+
+  dep :mi
+  dep :organism
+  dep DbNSFP, :predict, :mutations => :mi, :organism => :organism
+  task :DbNSFP_pred => :tsv do
+    TSV.get_stream step(:predict)
+  end
+
 
   dep :DbNSFP
   input :dbNSFP_field, :string, "Damage score field from DbNSFP", "MetaSVM_score"
