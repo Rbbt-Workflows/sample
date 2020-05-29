@@ -329,9 +329,9 @@ SNVTasks = Proc.new do
   end
 
   dep :DbNSFP
-  task :gene_damage_bias => :tsv do 
+  input :damage_field, :string, "Damage field to use from DbNSFP", "VEST3_score"
+  task :gene_damage_bias => :tsv do |damage_field|
 
-    damage_field = "MetaLR_score"
     protein_bg_scores = TSV.setup({}, :key_field => "Ensembl Protein ID", :fields => ["Score"], :type => :flat)
 
     protein_scores = {}
