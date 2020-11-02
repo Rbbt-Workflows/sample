@@ -46,7 +46,7 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
 
    # NOT USED!!!
    #  |
-   #  v
+   #vcf_file  v
    genomic_mutations.rb
 
    mutated_isoforms.rb
@@ -76,6 +76,7 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
   rbbt_commands=rbbt_commands{
    bootstrap
    list
+   migrate_sample
   }
  }
  etc=etc{

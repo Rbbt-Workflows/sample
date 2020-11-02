@@ -24,6 +24,7 @@ module Sample
         raise "No sample data for: #{ sample }" if vcfs.empty?
         vcfs.each do |file|
           job = Sequence.job(:genomic_mutations, sample, :vcf_file => file, :quality => nil)
+          job.clean if job.error? && job.recoverable_error?
           job.run(true)
           TSV.traverse job, :type => :array do |line|
             sin.puts line

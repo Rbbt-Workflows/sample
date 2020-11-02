@@ -20,23 +20,23 @@ module Sample
         else
           return "Frame_Shift_Del"
         end
-      when mis.select{|mi| mi =~ /ENSP.*:([A-Z])\d+([A-Z])/ && $1 != $2 }.any?
+      when mis.select{|mi| mi =~ /ENS.*P.*:([A-Z])\d+([A-Z])/ && $1 != $2 }.any?
         return "Missense_Mutation"
-      when mis.select{|mi| mi =~ /ENSP.*:[A-Z]\d+\*/}.any?
+      when mis.select{|mi| mi =~ /ENS.*P.*:[A-Z]\d+\*/}.any?
         return "Nonsense_Mutation"
-      when mis.select{|mi| mi =~ /ENSP.*:\*\d+[A-Z]/ }.any?
+      when mis.select{|mi| mi =~ /ENS.*P.*:\*\d+[A-Z]/ }.any?
         return "Nonstop_Mutation"
-      when mis.select{|mi| mi =~ /ENSP.*:Indel/}.any?
+      when mis.select{|mi| mi =~ /ENS.*P.*:Indel/}.any?
         if type == "INS"
           return "In_Frame_Ins"
         else
           return "In_Frame_Del"
         end
-      when mis.select{|mi| mi =~ /ENST.*:UTR3/ }.any?
+      when mis.select{|mi| mi =~ /ENS.*T.*:UTR3/ }.any?
         return "3'UTR"
-      when mis.select{|mi| mi =~ /ENST.*:UTR5/ }.any?
+      when mis.select{|mi| mi =~ /ENS.*T.*:UTR5/ }.any?
         return "5'UTR"
-      when mis.select{|mi| mi =~ /ENSP.*:([A-Z\*])\d+([A-Z\*])/ && $1 == $2 }.any?
+      when mis.select{|mi| mi =~ /ENS.*P.*:([A-Z\*])\d+([A-Z\*])/ && $1 == $2 }.any?
         return "Silent"
       else
         raise "Unkown: #{mis * ", "}"
@@ -90,7 +90,13 @@ module Sample
   dep :sequence_ontology, :compute => :produce
   dep :organism
   dep Sequence, :reference, :positions => :genomic_mutations, :organism => :organism, :compute => :produce
+  dep do |jobname,options,dependencies|
+    dependencies.collect{|d| d.rec_dependencies}.flatten.select{|dep| dep.task_name.to_s == 'expanded_vcf'}.first
+  end
+  extension :maf
   task :maf_file => :tsv do
+
+    vcf = dependencies.collect{|d| d.rec_dependencies}.flatten.select{|dep| dep.task_name.to_s == 'expanded_vcf'}.first
 
     ensg2name = Organism.identifiers(organism).index :target => "Associated Gene Name", :fields => ["Ensembl Gene ID"], :persist => true, :unnamed => true
     ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :persist => true, :unnamed => true
@@ -205,6 +211,7 @@ module Sample
   dep :expanded_vcf, :canfail => true
   dep :organism
   dep Sequence, :transcript_offsets, :positions => :genomic_mutations, :organism => :organism
+  extension :maf
   task :maf_file2 => :tsv do
     tsv = step(:maf_file).join.path.tsv :header_hash => ''
     tsv.key_field = "Genomic Mutation"
@@ -224,7 +231,7 @@ module Sample
 
     offsets = step(:transcript_offsets).load
 
-    tsv.add_field "Standard cDNA mutation" do |mutation,values|
+    tsv.add_field "Standard gDNA mutation" do |mutation,values|
       chr, pos, alt = mutation.split(":")
       chr = "chr" + chr unless chr =~ /^chr/
       [chr + ":g." + pos + values["Reference_Allele"].first + ">" + values["Tumor_Seq_Allele1"].first]
