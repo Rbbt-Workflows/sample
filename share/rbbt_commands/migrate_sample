@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+
+require 'rbbt-util'
+require 'rbbt/util/simpleopt'
+require 'rbbt/workflow'
+require 'rbbt/workflow/remote_workflow'
+
+$0 = "rbbt #{$previous_commands*""} #{ File.basename(__FILE__) }" if $previous_commands
+
+options = SOPT.setup <<EOF
+
+RSync a directory, commonly ~/.rbbt/ 
+
+$ rbbt migrate [options] <sample> <task> <search_path>
+
+You can specify extra rsync options after --
+
+-h--help Print this help
+-t--test Do a verbose dry run
+-p--print Print command
+-d--delete Delete source file when moved
+-s--source* Source server
+-t--target* Target server
+-e--extension* File extension
+-r--recursive Recursively move all deps
+-W--Workflow* Load extra workflow to find task
+EOF
+if options[:help]
+  if defined? rbbt_usage
+    rbbt_usage 
+  else
+    puts SOPT.doc
+  end
+  exit 0
+end
+
+sample, task, search_path, _sep, *other = ARGV
+
+search_path = 'user' if search_path.nil?
+
+path = Path.setup(File.join('var/jobs/Sample/', task, sample))
+
+if options[:extension]
+  path = path.set_extension(options[:extension])
+else
+  begin
+    Workflow.require_workflow options["Workflow"] if options["Workflow"]
+    extension = Sample.task_info(task)[:extension]
+    path = path.set_extension(extension)
+  rescue
+  end
+end
+
+Step.migrate(path, search_path, options)
