@@ -48,7 +48,7 @@ module Sample
 
   MAF_FIELDS = %w(
     Hugo_Symbol
-    Entrez_Gene_Id
+    Ensembl_Gene_Id
     Center
     NCBI_Build
     Chromosome
@@ -87,7 +87,7 @@ module Sample
   MISSING = "MISSING"
   dep :genomic_mutations, :compute => :produce
   dep :genomic_mutation_consequence, :compute => :produce
-  dep :sequence_ontology, :compute => :produce
+  dep :sequence_ontology, :compute => :produce, :organism => :organism
   dep :organism
   dep Sequence, :reference, :positions => :genomic_mutations, :organism => :organism, :compute => :produce
   dep do |jobname,options,dependencies|
@@ -96,6 +96,7 @@ module Sample
   extension :maf
   task :maf_file => :tsv do
 
+    organism = step(:organism).load
     vcf = dependencies.collect{|d| d.rec_dependencies}.flatten.select{|dep| dep.task_name.to_s == 'expanded_vcf'}.first
 
     ensg2name = Organism.identifiers(organism).index :target => "Associated Gene Name", :fields => ["Ensembl Gene ID"], :persist => true, :unnamed => true
@@ -120,8 +121,8 @@ module Sample
       result.extend MultipleResult
 
       protein = mis.any? ? mis.first.split(":").first : nil
-      entrez = ensp2ensg[protein] || enst2ensg[protein]
-      gene = ensg2name[entrez] || "Unknown"
+      ensembl = ensp2ensg[protein] || enst2ensg[protein]
+      gene = ensg2name[ensembl] || "Unknown"
 
       chr = mutation_parts[0]
       start = mutation_parts[1]
@@ -136,7 +137,7 @@ module Sample
       build = ""
 
       eend = start.to_i + allele.length - 1
-      strand = gene_strand[entrez] == 1 ? '+' : '-'
+      strand = gene_strand[ensembl] == 1 ? '+' : '-'
 
 
       reference = reference
@@ -166,7 +167,7 @@ module Sample
         uuid = sample
 
         values = []
-        values << entrez
+        values << ensembl
         values << center
         values << build
         values << chr
