@@ -90,14 +90,13 @@ module Sample
   dep :sequence_ontology, :compute => :produce, :organism => :organism
   dep :organism
   dep Sequence, :reference, :positions => :genomic_mutations, :organism => :organism, :compute => :produce
-  dep do |jobname,options,dependencies|
-    dependencies.collect{|d| d.rec_dependencies}.flatten.select{|dep| dep.task_name.to_s == 'expanded_vcf'}.first
-  end
+  #dep do |jobname,options,dependencies|
+  #  dependencies.collect{|d| d.rec_dependencies}.flatten.select{|dep| dep.task_name.to_s == 'expanded_vcf'}.first
+  #end
   extension :maf
   task :maf_file => :tsv do
 
     organism = step(:organism).load
-    vcf = dependencies.collect{|d| d.rec_dependencies}.flatten.select{|dep| dep.task_name.to_s == 'expanded_vcf'}.first
 
     ensg2name = Organism.identifiers(organism).index :target => "Associated Gene Name", :fields => ["Ensembl Gene ID"], :persist => true, :unnamed => true
     ensp2ensg = Organism.transcripts(organism).index :target => "Ensembl Gene ID", :fields => ["Ensembl Protein ID"], :persist => true, :unnamed => true
