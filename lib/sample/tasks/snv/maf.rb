@@ -108,7 +108,7 @@ module Sample
     dumper = TSV::Dumper.new :key_field => "Mutation ID", :fields => MAF_FIELDS, :type => :list
     dumper.init(:header_hash => "", :preamble => false)
     TSV.traverse pasted, :type => :double, :into => dumper do |mutation,values|
-      reference, mis, mut_term, mi_term, so_term = values
+      reference, gene, mis, mut_term, mi_term, so_term = values
       samples = [clean_name]
 
       mutation = mutation.first if Array === mutation
@@ -120,8 +120,13 @@ module Sample
       result.extend MultipleResult
 
       protein = mis.any? ? mis.first.split(":").first : nil
-      ensembl = ensp2ensg[protein] || enst2ensg[protein]
+      if protein.nil?
+        ensembl = gene.first
+      else
+        ensembl = ensp2ensg[protein] || enst2ensg[protein]
+      end
       gene = ensg2name[ensembl] || "Unknown"
+
 
       chr = mutation_parts[0]
       start = mutation_parts[1]
@@ -136,7 +141,7 @@ module Sample
       build = ""
 
       eend = start.to_i + allele.length - 1
-      strand = gene_strand[ensembl] == 1 ? '+' : '-'
+      strand = ensembl.nil? ? nil : gene_strand[ensembl] == 1 ? '+' : '-'
 
 
       reference = reference
@@ -216,6 +221,7 @@ module Sample
     tsv = step(:maf_file).join.path.tsv :header_hash => ''
     tsv.key_field = "Genomic Mutation"
     mis = step(:mutated_isoforms_fast).load
+    organism = step(:organism).load
 
     tsv = tsv.attach mis
 
@@ -237,13 +243,31 @@ module Sample
       [chr + ":g." + pos + values["Reference_Allele"].first + ">" + values["Tumor_Seq_Allele1"].first]
     end
 
+    transcript_5utr = Organism.transcript_5utr(organism).tsv(:single, :persist => true, :unnamed => true)
+
     tsv.add_field "Standard cDNA mutation" do |mutation,values|
       if offsets[mutation]
         offsets[mutation].collect do |v|
           transcript, position, strand = v.split(":")
-          transcript + ":" + "c." + (position.to_i + 1).to_s + values["Reference_Allele"].first + ">" + values["Tumor_Seq_Allele1"].first
+          utr = transcript_5utr[transcript]
+          cds_position = position.to_i - utr.to_i
+          transcript + ":" + "c." + (cds_position.to_i + 1).to_s + values["Reference_Allele"].first + ">" + values["Tumor_Seq_Allele1"].first
         end 
       end
+    end
+
+    tsv.add_field "Standard protein mutation" do |mutation,values|
+      mi = values["Mutated Isoform"].first
+      next if mi.nil?
+      protein, change = mi.split(":")
+      next if change =~ /^UTR./
+      ref, pos, alt = change.partition(/\d+/)
+      ref, alt = [ref, alt].collect do |l| 
+        Misc::THREE_TO_ONE_AA_CODE.keys[Misc::THREE_TO_ONE_AA_CODE.values.index(l)]
+      rescue
+        l
+      end.collect{|code| [code[0].upcase, code[1..-1]] * ""}
+      protein + ":" + "p." << ref << pos << alt
     end
 
     tsv
