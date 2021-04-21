@@ -135,7 +135,7 @@ module Sample
       type = allele.length == 1 ? "SNP" : (allele[0] == '+' ? "INS" : "DEL")
 
       #classification = Study.mutation_classification(mis, type)
-      classification = so_term.first
+      classification = so_term.first if so_term
 
       center = ""
       build = ""
