@@ -1,6 +1,6 @@
 Workflow.require_workflow "Sequence"
 Workflow.require_workflow "InterPro"
-Workflow.require_workflow "Structure"
+Workflow.require_workflow "Proteomics"
 Workflow.require_workflow "GERP"
 Workflow.require_workflow "DbSNP"
 Workflow.require_workflow "DbNSFP"
@@ -225,7 +225,7 @@ SNVTasks = Proc.new do
 
   dep :mi
   dep :organism
-  dep Structure, :mi_interfaces, :mutated_isoforms => :mi, :organism => :organism
+  dep Proteomics, :mi_interfaces, :mutated_isoforms => :mi, :organism => :organism
   task :interfaces => :tsv do
     parser = TSV::Parser.new step(:mi_interfaces)
     dumper = TSV::Dumper.new parser.options.merge(:fields => ["Partner Ensembl Protein ID"])
@@ -255,21 +255,21 @@ SNVTasks = Proc.new do
 
   dep :mi
   dep :organism
-  dep Structure, :annotate_mi, :mutated_isoforms => :mi, :organism => :organism
+  dep Proteomics, :annotate_mi, :mutated_isoforms => :mi, :organism => :organism
   task :annotate_mi => :tsv do
     TSV.get_stream(step(:annotate_mi))
   end
 
   dep :mi
   dep :organism
-  dep Structure, :annotate_mi_neighbours, :mutated_isoforms => :mi, :organism => :organism
+  dep Proteomics, :annotate_mi_neighbours, :mutated_isoforms => :mi, :organism => :organism
   task :annotate_mi_neighbours => :tsv do
     TSV.get_stream(step(:annotate_mi_neighbours))
   end
 
   dep :mi
   dep :organism
-  dep Structure, :annotate_mi, :mutated_isoforms => :mi, :organism => :organism, :database => "Appris"
+  dep Proteomics, :annotate_mi, :mutated_isoforms => :mi, :organism => :organism, :database => "Appris"
   task :firestar => :tsv do
     fields = ["Appris Feature", "Appris Feature Description", "Appris Feature Range"]
     parser = TSV::Parser.new step(:annotate_mi)
@@ -293,7 +293,7 @@ SNVTasks = Proc.new do
 
   dep :mi
   dep :organism
-  dep Structure, :annotate_mi_neighbours, :mutated_isoforms => :mi, :organism => :organism, :database => "Appris"
+  dep Proteomics, :annotate_mi_neighbours, :mutated_isoforms => :mi, :organism => :organism, :database => "Appris"
   task :firestar_neighbours => :tsv do
     fields = ["Appris Feature", "Appris Feature Description", "Appris Feature Range"]
     parser = TSV::Parser.new step(:annotate_mi_neighbours)
