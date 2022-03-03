@@ -13,7 +13,7 @@ RSync a directory, commonly ~/.rbbt/
 
 $ rbbt migrate [options] <sample> <task> <search_path>
 
-You can specify extra rsync options after --
+You can specify extra rsync options after --. 
 
 -h--help Print this help
 -t--test Do a verbose dry run
@@ -35,20 +35,36 @@ if options[:help]
 end
 
 sample, task, search_path, _sep, *other = ARGV
-
 search_path = 'user' if search_path.nil?
 
-path = Path.setup(File.join('var/jobs/Sample/', task, sample))
-
-if options[:extension]
-  path = path.set_extension(options[:extension])
+if Misc.is_filename?(sample)
+    samples = Open.read(sample).split("\n")
 else
-  begin
-    Workflow.require_workflow options["Workflow"] if options["Workflow"]
-    extension = Sample.task_info(task)[:extension]
-    path = path.set_extension(extension)
-  rescue
-  end
+    samples = [sample]
 end
 
-Step.migrate(path, search_path, options)
+if Misc.is_filename?(task)
+    tasks = Open.read(task).split("\n")
+else
+    tasks = [task]
+end
+
+samples.each do |sample|
+    tasks.each do |task|
+        path = Path.setup(File.join('var/jobs/Sample/', task, sample))
+
+        if options[:extension]
+            path = path.set_extension(options[:extension])
+        else
+            begin
+                Workflow.require_workflow options["Workflow"] if options["Workflow"]
+                extension = Sample.task_info(task)[:extension]
+                path = path.set_extension(extension) if extension 
+            rescue
+            end
+        end
+
+        Step.migrate(path, search_path, options)
+    end
+end
+
