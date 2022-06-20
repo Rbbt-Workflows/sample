@@ -263,9 +263,11 @@ module Sample
       next if change =~ /^UTR./
       ref, pos, alt = change.partition(/\d+/)
       ref, alt = [ref, alt].collect do |l| 
-        Misc::THREE_TO_ONE_AA_CODE.keys[Misc::THREE_TO_ONE_AA_CODE.values.index(l)]
-      rescue
-        l
+        begin
+          Misc::THREE_TO_ONE_AA_CODE.keys[Misc::THREE_TO_ONE_AA_CODE.values.index(l)]
+        rescue
+          l
+        end
       end.collect{|code| [code[0].upcase, code[1..-1]] * ""}
       protein + ":" + "p." << ref << pos << alt
     end
