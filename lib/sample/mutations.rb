@@ -19,9 +19,9 @@ module Sample
     if sample_dir.genotype.exists?
       return sample_dir.genotype.find
     else
+      vcfs = vcf_files(sample)
+      raise "No sample data for: #{ sample }" if vcfs.empty?
       Misc.open_pipe do |sin|
-        vcfs = vcf_files(sample)
-        raise "No sample data for: #{ sample }" if vcfs.empty?
         vcfs.each do |file|
           job = Sequence.job(:genomic_mutations, sample, :vcf_file => file, :quality => nil)
           job.clean if job.error? && job.recoverable_error?
