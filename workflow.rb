@@ -1,6 +1,7 @@
 require 'rbbt-util'
 require 'rbbt/workflow'
 
+require 'rbbt/sources/organism'
 module Sample
   extend Workflow
 
@@ -35,13 +36,13 @@ end
 
 require 'sample'
 
-Workflow.require_workflow "MutationSignatures"
-require 'sample/tasks/mutation_signatures'
+#Workflow.require_workflow "MutationSignatures"
+#require 'sample/tasks/mutation_signatures'
 
-require 'sample/tasks/snv'
-require 'sample/tasks/cnv'
+#require 'sample/tasks/snv'
+#require 'sample/tasks/cnv'
 ##require 'sample/tasks/vcf'
-require 'sample/tasks/mutated_isoforms'
+#require 'sample/tasks/mutated_isoforms'
 
 
 require 'rbbt/entity/sample'

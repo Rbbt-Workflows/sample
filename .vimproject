@@ -10,64 +10,6 @@ Sample=/$PWD filter="*.rb *.R *.js *.sass *.haml *.tsv" {
    cnv.rb
   }
 
-  tasks=sample/tasks{
-   snv.rb
-
-   vcf.rb
-   snv=snv{
-    vcf.rb
-
-    genomic_mutations.rb
-
-    common.rb
-
-    zygosity.rb
-
-    genes.rb
-
-    maf.rb
-
-    # NOT USED!!!
-    #  |
-    #  v
-
-    features.rb
-
-    mutated_isoforms.rb
-
-    damage.rb
-
-    structureppi.rb
-
-    drugs.rb
-   }
-
-   cnv.rb
-
-   # NOT USED!!!
-   #  |
-   #vcf_file  v
-   genomic_mutations.rb
-
-   mutated_isoforms.rb
-   mutated_isoforms=mutated_isoforms{
-    consequence.rb
-    annotations.rb
-    damage.rb
-   }
-
-   genes.rb
-   genes=genes{
-    alterations.rb
-    activity.rb
-    tumor_suppressors.rb
-    oncogenes.rb
-   }
-
-   cnvs.rb
-
-  }
-
   entity=rbbt/entity{
    sample.rb
   }
